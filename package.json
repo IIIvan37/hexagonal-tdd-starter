@@ -1,0 +1,45 @@
+{
+  "name": "hexagonal-tdd-starter",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24.11.0",
+    "pnpm": ">=10.11.0"
+  },
+  "packageManager": "pnpm@10.11.0",
+  "scripts": {
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:mutation": "stryker run",
+    "lint": "biome lint .",
+    "lint:fix": "biome lint . --write",
+    "format": "biome format .",
+    "format:fix": "biome format . --write",
+    "check": "biome check .",
+    "check:fix": "biome check . --write",
+    "check:arch": "sheriff verify",
+    "check:dead": "knip",
+    "check:dup": "jscpd packages",
+    "gate": "pnpm run \"/^(typecheck|check|check:arch|test:coverage|check:dead|check:dup)$/\"",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.2.4",
+    "@commitlint/cli": "^21.1.0",
+    "@commitlint/config-conventional": "^21.1.0",
+    "@softarc/sheriff-core": "^0.19.6",
+    "@stryker-mutator/core": "^9.6.1",
+    "@stryker-mutator/vitest-runner": "^9.6.1",
+    "@types/node": "^24.0.0",
+    "@vitest/coverage-v8": "^4.0.4",
+    "fast-check": "^3.23.1",
+    "husky": "^9.1.7",
+    "jscpd": "^5.0.6",
+    "knip": "^6.16.1",
+    "tsx": "^4.19.4",
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.4"
+  }
+}

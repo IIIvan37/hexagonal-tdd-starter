@@ -1,0 +1,85 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.5.1/schema.json",
+  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "preset": "recommended"
+    }
+  },
+  "formatter": {
+    "enabled": true,
+    "formatWithErrors": false,
+    "indentStyle": "space",
+    "indentWidth": 2,
+    "lineEnding": "lf",
+    "lineWidth": 80
+  },
+  "javascript": {
+    "formatter": {
+      "quoteProperties": "asNeeded",
+      "trailingCommas": "none",
+      "semicolons": "asNeeded",
+      "arrowParentheses": "always",
+      "bracketSpacing": true,
+      "quoteStyle": "single"
+    }
+  },
+  "json": {
+    "formatter": {
+      "trailingCommas": "none"
+    }
+  },
+  "files": {
+    "includes": [
+      "**/*.js",
+      "**/*.ts",
+      "**/*.json",
+      "!**/node_modules",
+      "!**/dist",
+      "!**/coverage",
+      "!**/reports",
+      "!**/.stryker-tmp"
+    ],
+    "ignoreUnknown": true
+  },
+  "overrides": [
+    {
+      "includes": ["packages/core/src/**", "!**/*.spec.ts"],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedGlobals": {
+              "level": "error",
+              "options": {
+                "deniedGlobals": {
+                  "window": "Pure core: no browser global (lives in a web adapter).",
+                  "document": "Pure core: no browser global (lives in a web adapter).",
+                  "navigator": "Pure core: no browser global (lives in a web adapter).",
+                  "localStorage": "Pure core: no browser global (lives in a web adapter).",
+                  "fetch": "Pure core: no network I/O (lives in an adapter).",
+                  "process": "Pure core: no access to the Node environment."
+                }
+              }
+            },
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "paths": {
+                  "node:fs": "Pure core: I/O lives in an adapter.",
+                  "node:fs/promises": "Pure core: I/O lives in an adapter.",
+                  "node:path": "Pure core: no Node builtin.",
+                  "node:os": "Pure core: no Node builtin.",
+                  "node:crypto": "Pure core: no Node builtin.",
+                  "node:child_process": "Pure core: no Node builtin.",
+                  "node:worker_threads": "Pure core: no Node builtin.",
+                  "node:stream": "Pure core: no Node builtin."
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  ]
+}

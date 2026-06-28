@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Node from .nvmrc + pnpm via Corepack (on WSL node isn't always on PATH).
+if [ -z "$NVM_DIR" ]; then
+  export NVM_DIR="$HOME/.nvm"
+fi
+if [ -s "$NVM_DIR/nvm.sh" ]; then
+  . "$NVM_DIR/nvm.sh"
+  nvm use >/dev/null 2>&1 || true
+fi
+if ! command -v pnpm >/dev/null 2>&1 && command -v corepack >/dev/null 2>&1; then
+  corepack enable >/dev/null 2>&1 || true
+fi
+
+# Conventional Commits — reject a non-conforming message.
+pnpm -s exec commitlint --edit "$1"
