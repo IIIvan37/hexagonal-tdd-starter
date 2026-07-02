@@ -24,8 +24,14 @@ pnpm gate
    globals and `node:*` imports in the core are caught by Biome (step 2, override on
    `packages/core`), not by Sheriff.
 4. `pnpm test:coverage` — vitest with coverage thresholds on `packages/core`.
-5. `pnpm check:dead` — knip (orphan exports / dead code).
-6. `pnpm check:dup` — jscpd (copy-paste, threshold 0).
+5. `pnpm check:dead` — knip (orphan exports / dead code). Caveat: `@app/core`'s
+   `index.ts` is the package entry, so a **core public export with no consumer
+   yet is NOT flagged** — the application README registry and review are the
+   guard there.
+6. `pnpm check:dup` — jscpd (copy-paste). Blocking via the **threshold ratchet**
+   in `.jscpd.json` (max duplicated-lines %, spec files excluded): the gate
+   fails when duplication grows past the budget. Lower the threshold as clones
+   get factored out — never raise it.
 
 Individual pieces if needed: `pnpm typecheck`, `pnpm check:fix` (biome auto-fix),
 `pnpm check:arch`, `pnpm test`, `pnpm check:dead`, `pnpm check:dup`.
@@ -40,7 +46,8 @@ Individual pieces if needed: `pnpm typecheck`, `pnpm check:fix` (biome auto-fix)
 - **knip**: an orphan export = either wire it or delete it. No dead code "just in
   case".
 - **jscpd**: a clone = factor into a shared helper (often pure domain). Don't
-  duplicate across strategies/variants.
+  duplicate across strategies/variants. A threshold failure means the new code
+  added duplication — factor it out rather than bumping `.jscpd.json`.
 
 ## Before declaring done
 

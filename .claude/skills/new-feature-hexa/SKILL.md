@@ -70,6 +70,11 @@ build/spike that consumer first**. Don't invent the shape.
 - Full gate green: `/quality-gate`. Knip must not flag a new orphan export — if it
   does, the export had no consumer (the very smell this skill prevents): wire it or
   delete it.
+- **Knip blind spot**: `@app/core`'s `index.ts` is the package entry, so knip
+  CANNOT flag a core public export that nothing consumes — it only catches
+  orphans inside packages. For the core surface, YOU are the check: before
+  exporting from `index.ts`, name the consumer (adapter, use-case, or the next
+  slice that pulls it); if you can't, don't export it yet.
 - Append the new use-case/port to `packages/core/src/application/README.md`.
 
 ## 6. Close the step

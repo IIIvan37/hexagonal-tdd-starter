@@ -12,15 +12,32 @@ if ! command -v pnpm >/dev/null 2>&1 && command -v corepack >/dev/null 2>&1; the
   corepack enable >/dev/null 2>&1 || true
 fi
 
-# Blocking guardrails (greenfield: no debt, so no tolerance).
-echo "🔍 biome --write"
-pnpm -s check:fix
-git add -u
+# Staged files (added/copied/modified/renamed — deletions need no formatting).
+staged=$(git diff --cached --name-only --diff-filter=ACMR)
 
-echo "🔍 gate (typecheck + check:arch + tests + knip + jscpd)"
+# Doc-only fast path: a commit touching only *.md / docs/** skips the gate.
+# commitlint still runs via the commit-msg hook; CI re-runs the full gate.
+if [ -n "$staged" ] && ! printf '%s\n' "$staged" | grep -qvE '\.md$|^docs/'; then
+  echo "📝 doc-only commit — skipping the gate"
+  exit 0
+fi
+
+# Format ONLY the staged files, then re-stage those same paths. Never `git add
+# -u` here: it would sweep unrelated unstaged work into the commit.
+if [ -n "$staged" ]; then
+  echo "🔍 biome --write (staged files only)"
+  printf '%s\n' "$staged" | xargs pnpm -s exec biome check --write --no-errors-on-unmatched
+  printf '%s\n' "$staged" | xargs git add --
+fi
+
+# Blocking guardrails (greenfield: no debt, so no tolerance). Same composition
+# as `pnpm gate` — a commit that passes here cannot fail CI on a skipped check.
+# (Only repo-wide `biome check` is replaced by the staged-only pass above, so a
+# partial commit isn't blocked by unformatted WIP files; CI covers the rest.)
+echo "🔍 gate (typecheck + arch + coverage + knip + jscpd)"
 pnpm -s typecheck
 pnpm -s check:arch
-pnpm -s test
+pnpm -s test:coverage
 pnpm -s check:dead
 pnpm -s check:dup
 
