@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "bin": {
-    "greet": "src/main.ts"
+    "greet": "./src/main.ts"
   },
   "scripts": {
     "start": "tsx src/main.ts"

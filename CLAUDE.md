@@ -57,6 +57,10 @@ can't see.
 ## Conventions
 
 - Code comments and test names in **English**. File names **kebab-case**.
+- **Strip-only TypeScript.** The `greet` bin points at the `.ts` sources, which Node
+  runs through type stripping. No syntax that emits code — no parameter properties,
+  `enum`, `namespace`, or decorators. Locked by `packages/cli/src/main.spec.ts`,
+  which runs the real binary under plain `node`.
 - **Conventional Commits** (enforced by commitlint + the husky `commit-msg` hook).
 - **Each feature gets its own branch**, merged via PR — never commit a feature
   directly to `main` (enforced by `.claude/hooks/block-commit-on-main.sh`).

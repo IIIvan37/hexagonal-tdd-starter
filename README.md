@@ -18,6 +18,10 @@ nothing else, so you can replace it with your own domain immediately.
 - **Mutation testing** (Stryker, scoped to the pure core) — run locally before the
   PR, and in CI post-merge.
 - **TDD strict** with fast-check property tests; one example vertical slice.
+- **No build step**: the bin runs the `.ts` sources directly through Node's type
+  stripping, so the sources stay in the strip-only subset (no parameter properties,
+  enums, namespaces, decorators) — an invariant held by a test that runs the real
+  binary under plain `node`.
 - **Guardrails**: husky `pre-commit` (gate) + `commit-msg` (commitlint), a
   `block-commit-on-main` hook (code needs a branch+PR; docs may go straight to main).
 - **CI** (GitHub Actions): gate + commitlint on PRs, mutation post-merge; Dependabot.
