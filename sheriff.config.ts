@@ -19,6 +19,7 @@ export const config: SheriffConfig = {
   modules: {
     'packages/core/src/domain': ['core:domain'],
     'packages/core/src/application': ['core:application'],
+    'packages/core/src/testing': ['core:testing'],
     'packages/core/src': ['core:api'],
     'packages/cli/src': ['cli']
   },
@@ -32,7 +33,12 @@ export const config: SheriffConfig = {
     'core:application': ['core:domain'],
     // The public contract (index.ts) re-exports domain + application.
     'core:api': ['core:domain', 'core:application'],
-    // Adapters consume only the core's public contract.
-    cli: ['core:api']
+    // Test support (fakes + port contracts): sees the layers it doubles, and is
+    // itself invisible to production code — nothing but an adapter's *specs*
+    // depends on it, which is why no rule grants `core:api` access to it.
+    'core:testing': ['core:domain', 'core:application'],
+    // Adapters consume the core's public contract, plus the test support their
+    // specs replay the port contracts from.
+    cli: ['core:api', 'core:testing']
   }
 }

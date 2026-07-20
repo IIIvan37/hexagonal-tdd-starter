@@ -27,6 +27,10 @@ export default defineConfig({
     alias: {
       // fileURLToPath, not URL.pathname: on Windows the latter yields
       // "/C:/…", which is not a usable filesystem path.
+      // Longest specifier first: '@app/core' would otherwise shadow the subpath.
+      '@app/core/testing': fileURLToPath(
+        new URL('./packages/core/src/testing/index.ts', import.meta.url)
+      ),
       '@app/core': fileURLToPath(
         new URL('./packages/core/src/index.ts', import.meta.url)
       )

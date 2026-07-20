@@ -17,7 +17,13 @@ nothing else, so you can replace it with your own domain immediately.
   threshold 0). Greenfield = no debt tolerated, a finding fails the build.
 - **Mutation testing** (Stryker, scoped to the pure core) — run locally before the
   PR, and in CI post-merge.
-- **TDD strict** with fast-check property tests; one example vertical slice.
+- **TDD strict** with fast-check property tests; one example vertical slice, tested
+  at three altitudes that catch different things:
+  - **port contracts** (`@app/core/testing`) — written once per port, replayed
+    against every implementation, so adapters stay substitutable;
+  - **acceptance test** (`cli/src/run.spec.ts`) — the real composition root in
+    process, only the process boundary doubled;
+  - **binary test** (`cli/src/main.spec.ts`) — the shipped bin under plain `node`.
 - **No build step**: the bin runs the `.ts` sources directly through Node's type
   stripping, so the sources stay in the strip-only subset (no parameter properties,
   enums, namespaces, decorators) — an invariant held by a test that runs the real
@@ -58,9 +64,11 @@ Requires Node (see `.nvmrc`) and pnpm via Corepack.
 ```
 packages/core/src/domain        pure model
 packages/core/src/application   use-cases + ports (the registry README lives here)
+packages/core/src/testing       port contracts + in-memory fakes (@app/core/testing)
 packages/core/src/index.ts      the only public surface adapters import
 packages/cli/src/adapters       port implementations (I/O lives here)
-packages/cli/src/main.ts        composition root / entrypoint
+packages/cli/src/run.ts         composition root (testable in process)
+packages/cli/src/main.ts        entrypoint — the process boundary, nothing else
 .claude/skills                  the method, as Claude Code skills
 docs/STATUS.md, docs/sessions   resumable project state
 ```

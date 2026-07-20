@@ -28,7 +28,10 @@ domain.
 packages/
   core/   — pure hexagon, no I/O. src/domain (model) + src/application (use-cases + ports).
             src/index.ts is the only public surface adapters import.
-  cli/     — Node adapters implementing the ports + entrypoint (src/main.ts).
+            src/testing (@app/core/testing) — port contracts + in-memory fakes,
+            consumed by adapter SPECS only, never by production code.
+  cli/     — Node adapters implementing the ports, composition root (src/run.ts),
+            entrypoint (src/main.ts — the process boundary, nothing else).
 ```
 
 Dependency direction: `application → domain`; adapters depend only on `@app/core`'s
@@ -48,6 +51,10 @@ can't see.
 
 - **TDD strict** (`/tdd-cycle`): red → green → refactor; never write core code
   without a failing test. Property tests (fast-check) for invariants.
+- **Ports are contract-tested.** Port obligations are written once in
+  `packages/core/src/testing/port-contracts.ts` and replayed by each adapter's
+  spec via a factory. Never restate port assertions in an adapter spec; never
+  hand-roll a fake when `@app/core/testing` has one.
 - **New feature** = a hexagonal vertical slice (`/new-feature-hexa`): pure domain +
   use-case/port in `core`, adapter in `cli`; register it in
   [packages/core/src/application/README.md](packages/core/src/application/README.md).
