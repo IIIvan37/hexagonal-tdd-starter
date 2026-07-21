@@ -2,6 +2,9 @@
 
 export type { GreetDeps, GreetResult } from './application/greet.ts'
 export { greet } from './application/greet.ts'
-export type { GreetingSink, NameSource } from './application/ports.ts'
+export type { Clock, GreetingSink, NameSource } from './application/ports.ts'
 export type { Greeting } from './domain/greeting.ts'
 export { buildGreeting } from './domain/greeting.ts'
+// Exported because `SystemClock` (cli adapter) must build one. `hourOfDay` and
+// `salutationFor` stay internal: no adapter consumes them, the use-case does.
+export type { Instant } from './domain/instant.ts'

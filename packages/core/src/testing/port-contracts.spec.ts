@@ -1,16 +1,25 @@
 import { describe, expect, it } from 'vitest'
 import {
   FailingNameSource,
+  FixedClock,
   InMemoryGreetingSink,
   InMemoryNameSource
 } from './in-memory-adapters.ts'
-import { greetingSinkContract, nameSourceContract } from './port-contracts.ts'
+import {
+  clockContract,
+  greetingSinkContract,
+  nameSourceContract
+} from './port-contracts.ts'
 
 // The in-memory adapters are the reference implementations: if they fail the
 // contract, the contract is wrong. Every real adapter replays these same suites.
 nameSourceContract('InMemoryNameSource', () => ({
   source: new InMemoryNameSource('Ada'),
   expectedName: 'Ada'
+}))
+
+clockContract('FixedClock', () => ({
+  clock: new FixedClock({ epochMs: 9 * 3_600_000, offsetMinutes: 120 })
 }))
 
 greetingSinkContract('InMemoryGreetingSink', () => {

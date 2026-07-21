@@ -1,5 +1,6 @@
-import type { GreetingSink, NameSource } from '../application/ports.ts'
+import type { Clock, GreetingSink, NameSource } from '../application/ports.ts'
 import type { Greeting } from '../domain/greeting.ts'
+import type { Instant } from '../domain/instant.ts'
 
 /**
  * Reference in-memory implementations of the ports. They exist for two reasons:
@@ -31,6 +32,22 @@ export class FailingNameSource implements NameSource {
 
   async load(): Promise<string> {
     throw new Error(this.reason)
+  }
+}
+
+/**
+ * `Clock` pinned to one instant — the whole point of the port. A test that needs
+ * "9am" says so, instead of hoping CI runs in the morning.
+ */
+export class FixedClock implements Clock {
+  private readonly instant: Instant
+
+  constructor(instant: Instant) {
+    this.instant = instant
+  }
+
+  now(): Instant {
+    return this.instant
   }
 }
 

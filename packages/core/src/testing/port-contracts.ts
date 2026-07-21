@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { GreetingSink, NameSource } from '../application/ports.ts'
+import type { Clock, GreetingSink, NameSource } from '../application/ports.ts'
 import type { Greeting } from '../domain/greeting.ts'
+import { hourOfDay } from '../domain/instant.ts'
 
 /**
  * Port **contract tests**: the obligations an adapter must honour, written once
@@ -21,6 +22,11 @@ export interface NameSourceSubject {
   readonly source: NameSource
   /** The name this subject is expected to load. */
   readonly expectedName: string
+}
+
+/** What a `Clock` implementation must provide to be contract-tested. */
+export interface ClockSubject {
+  readonly clock: Clock
 }
 
 /** What a `GreetingSink` implementation must expose to be contract-tested. */
@@ -50,6 +56,49 @@ export function nameSourceContract(
       const first = await source.load()
       const second = await source.load()
       expect(second).toBe(first)
+    })
+  })
+}
+
+/**
+ * Replay the `Clock` contract against one implementation.
+ * `createSubject` must return a FRESH subject on every call.
+ */
+export function clockContract(
+  label: string,
+  createSubject: () => ClockSubject
+): void {
+  // The widest real-world UTC offsets: UTC-12:00 to UTC+14:00.
+  const MIN_OFFSET_MINUTES = -720
+  const MAX_OFFSET_MINUTES = 840
+
+  describe(`${label} — Clock contract`, () => {
+    it('reports a finite instant on the epoch timeline', () => {
+      const { clock } = createSubject()
+      const { epochMs } = clock.now()
+      expect(Number.isFinite(epochMs)).toBe(true)
+    })
+
+    it('reports a whole-minute offset within the real range of timezones', () => {
+      const { clock } = createSubject()
+      const { offsetMinutes } = clock.now()
+      expect(Number.isInteger(offsetMinutes)).toBe(true)
+      expect(offsetMinutes).toBeGreaterThanOrEqual(MIN_OFFSET_MINUTES)
+      expect(offsetMinutes).toBeLessThanOrEqual(MAX_OFFSET_MINUTES)
+    })
+
+    it('never runs backwards between two reads', () => {
+      const { clock } = createSubject()
+      const first = clock.now().epochMs
+      const second = clock.now().epochMs
+      expect(second).toBeGreaterThanOrEqual(first)
+    })
+
+    it('yields an instant the domain can read as a wall-clock hour', () => {
+      const { clock } = createSubject()
+      const hour = hourOfDay(clock.now())
+      expect(hour).toBeGreaterThanOrEqual(0)
+      expect(hour).toBeLessThanOrEqual(23)
     })
   })
 }

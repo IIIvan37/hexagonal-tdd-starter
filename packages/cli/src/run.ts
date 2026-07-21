@@ -1,6 +1,7 @@
 import { greet } from '@app/core'
 import { ArgvNameSource } from './adapters/argv-name-source.ts'
 import { ConsoleGreetingSink } from './adapters/console-greeting-sink.ts'
+import { SystemClock } from './adapters/system-clock.ts'
 
 /**
  * Composition root: parse argv, inject the real ports into the use-case, map the
@@ -19,7 +20,8 @@ export async function run(argv: readonly string[]): Promise<number> {
 
   const result = await greet({
     source: new ArgvNameSource(name),
-    sink: new ConsoleGreetingSink()
+    sink: new ConsoleGreetingSink(),
+    clock: new SystemClock()
   })
 
   if (!result.ok) {

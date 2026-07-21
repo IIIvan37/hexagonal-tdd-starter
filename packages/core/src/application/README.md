@@ -7,7 +7,7 @@ The single place to look before adding a feature, so ports and use-cases get
 
 | Use-case | Signature | Notes |
 |----------|-----------|-------|
-| `greet` | `(deps) => Promise<GreetResult>` | Example slice — load a name, build a greeting, emit it. |
+| `greet` | `(deps) => Promise<GreetResult>` | Example slice — load a name, read the clock, build a time-aware greeting, emit it. |
 
 ## Ports
 
@@ -15,6 +15,14 @@ The single place to look before adding a feature, so ports and use-cases get
 |------|------|----------|----------------|
 | `NameSource` | driving | `nameSourceContract` | `cli`: `ArgvNameSource` · `InMemoryNameSource`, `FailingNameSource` (fakes) |
 | `GreetingSink` | driven | `greetingSinkContract` | `cli`: `ConsoleGreetingSink` · `InMemoryGreetingSink` (fake) |
+| `Clock` | driven | `clockContract` | `cli`: `SystemClock` · `FixedClock` (fake) |
+
+`Clock` is the one to copy when you meet ambient state. Reading the time and
+resolving the machine's timezone are impure, so they sit in `SystemClock`; the
+port hands the core an `Instant` (`epochMs` + `offsetMinutes`), and everything
+after that — `hourOfDay`, `salutationFor` — is pure arithmetic the domain can
+property-test. Randomness, IDs and env config follow the same shape: a port that
+yields the value, never a global read from inside the hexagon.
 
 ## Test support (`@app/core/testing`)
 

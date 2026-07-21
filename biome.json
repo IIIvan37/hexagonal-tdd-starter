@@ -58,7 +58,16 @@
                   "navigator": "Pure core: no browser global (lives in a web adapter).",
                   "localStorage": "Pure core: no browser global (lives in a web adapter).",
                   "fetch": "Pure core: no network I/O (lives in an adapter).",
-                  "process": "Pure core: no access to the Node environment."
+                  "XMLHttpRequest": "Pure core: no network I/O (lives in an adapter).",
+                  "WebSocket": "Pure core: no network I/O (lives in an adapter).",
+                  "process": "Pure core: no access to the Node environment.",
+                  "Date": "Pure core: no ambient time. Inject the `Clock` port and pass an `Instant`.",
+                  "performance": "Pure core: no ambient time. Inject the `Clock` port.",
+                  "setTimeout": "Pure core: no scheduling. Time is a port, not a global.",
+                  "setInterval": "Pure core: no scheduling. Time is a port, not a global.",
+                  "setImmediate": "Pure core: no scheduling. Time is a port, not a global.",
+                  "queueMicrotask": "Pure core: no scheduling. Time is a port, not a global.",
+                  "crypto": "Pure core: no ambient randomness. Inject a port that yields the value."
                 }
               }
             },
@@ -73,7 +82,18 @@
                   "node:crypto": "Pure core: no Node builtin.",
                   "node:child_process": "Pure core: no Node builtin.",
                   "node:worker_threads": "Pure core: no Node builtin.",
-                  "node:stream": "Pure core: no Node builtin."
+                  "node:stream": "Pure core: no Node builtin.",
+                  "node:http": "Pure core: I/O lives in an adapter.",
+                  "node:https": "Pure core: I/O lives in an adapter.",
+                  "node:net": "Pure core: I/O lives in an adapter.",
+                  "node:dns": "Pure core: I/O lives in an adapter.",
+                  "node:tls": "Pure core: I/O lives in an adapter.",
+                  "node:dgram": "Pure core: I/O lives in an adapter.",
+                  "node:readline": "Pure core: I/O lives in an adapter.",
+                  "node:process": "Pure core: no access to the Node environment.",
+                  "node:timers": "Pure core: no scheduling. Time is a port, not a global.",
+                  "node:timers/promises": "Pure core: no scheduling. Time is a port, not a global.",
+                  "node:perf_hooks": "Pure core: no ambient time. Inject the `Clock` port."
                 }
               }
             }

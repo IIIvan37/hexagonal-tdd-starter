@@ -36,14 +36,21 @@ packages/
 
 Dependency direction: `application → domain`; adapters depend only on `@app/core`'s
 public API. Enforced at three levels: the package graph, **Sheriff**
-(`sheriff.config.ts`), and **Biome** (`noRestrictedGlobals` + `noRestrictedImports`
-override on `packages/core`) for the no-I/O / no-browser-global invariant Sheriff
-can't see.
+(`sheriff.config.ts`), **Biome** (`noRestrictedGlobals` + `noRestrictedImports`
+override on `packages/core`) for the no-I/O / no-ambient-state invariant Sheriff
+can't see, and a **fitness function** (`packages/core/src/purity.spec.ts`) for the
+member expressions Biome can't express — `Math` is legitimate, `Math.random()` is
+not.
 
 ## Invariants — do not violate
 
 1. **Pure, agnostic core.** No I/O, no `window`/`fetch`/`fs`/`process` in the
    algorithms. Values in, values out. Impure code lives in an adapter behind a port.
+   **Determinism counts as purity**: no `Date`/`Date.now()`, `Math.random()`,
+   `crypto.randomUUID()`, timers or `process.env` in the core — inject a port that
+   yields the value (`Clock` is the worked example). Enforced by Biome for globals
+   and imports, and by the fitness function in `packages/core/src/purity.spec.ts`
+   for member expressions Biome cannot express (`Math.random()`).
 2. **Outside-in.** The domain is a supplier, pulled into existence by a consumer
    need (a use-case / acceptance test) — never written speculatively.
 
