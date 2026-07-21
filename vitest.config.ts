@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
@@ -24,8 +25,11 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@app/core': new URL('./packages/core/src/index.ts', import.meta.url)
-        .pathname
+      // fileURLToPath, not URL.pathname: on Windows the latter yields
+      // "/C:/…", which is not a usable filesystem path.
+      '@app/core': fileURLToPath(
+        new URL('./packages/core/src/index.ts', import.meta.url)
+      )
     }
   }
 })
