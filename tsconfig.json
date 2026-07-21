@@ -2,7 +2,7 @@
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
-    "types": ["vitest/globals", "node"],
+    "types": ["node"],
     "paths": {
       "@app/core": ["./packages/core/src/index.ts"],
       "@app/core/testing": ["./packages/core/src/testing/index.ts"]

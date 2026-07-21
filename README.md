@@ -30,8 +30,9 @@ nothing else, so you can replace it with your own domain immediately.
   the host, the core gets an `Instant` and does pure arithmetic on it, and a test
   pins time with `FixedClock` instead of hoping CI runs in the morning.
 - **Blocking quality gate** (`pnpm gate`): TypeScript strict, Biome lint+format,
-  Sheriff, vitest with coverage thresholds, knip (dead code), jscpd (duplication,
-  threshold 0). Greenfield = no debt tolerated, a finding fails the build.
+  Sheriff, vitest with **100 % coverage thresholds on every file**, knip (dead
+  code), jscpd (duplication, threshold 0). Greenfield = no debt tolerated, a
+  finding fails the build.
 - **Mutation testing** (Stryker, scoped to the pure core) — run locally before the
   PR, and in CI post-merge.
 - **TDD strict** with fast-check property tests; one example vertical slice, tested

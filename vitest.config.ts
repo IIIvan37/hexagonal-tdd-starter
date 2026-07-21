@@ -3,22 +3,33 @@ import { defineConfig } from 'vitest/config'
 
 export default defineConfig({
   test: {
-    globals: true,
+    // No `globals: true`: every spec imports from 'vitest' explicitly, so the
+    // implicit globals were dead config — and an explicit import is what makes a
+    // spec readable on its own.
     environment: 'node',
     include: ['packages/*/src/**/*.spec.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
       include: ['packages/*/src/**/*.ts'],
-      exclude: ['**/*.spec.ts', '**/index.ts', '**/*.d.ts'],
-      // TDD strict: the pure core is meant to stay fully covered. Thresholds gate
-      // `core`; cli adapters are exercised end-to-end and main.ts is the entrypoint.
+      exclude: [
+        '**/*.spec.ts',
+        '**/index.ts',
+        '**/*.d.ts',
+        // The process boundary: a single `process.exit(await run(…))`. It cannot
+        // be reached in process, and `main.spec.ts` covers it by running the
+        // real binary — which v8 does not instrument.
+        'packages/cli/src/main.ts'
+      ],
+      // TDD strict, greenfield: written test-first means covered, so the bar is
+      // 100 everywhere and a drop is a regression, not a budget to spend. Raise
+      // a genuine exception here with a comment rather than lowering the bar.
       thresholds: {
-        'packages/core/src/**': {
-          statements: 90,
-          branches: 85,
-          functions: 90,
-          lines: 90
+        '**': {
+          statements: 100,
+          branches: 100,
+          functions: 100,
+          lines: 100
         }
       }
     }
