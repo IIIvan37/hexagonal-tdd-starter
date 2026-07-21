@@ -15,6 +15,15 @@ nothing else, so you can replace it with your own domain immediately.
   - a **fitness function** (`packages/core/src/purity.spec.ts`) for what neither
     can express: `Math` is fine, `Math.random()` is not. It tests its own
     detector, so it can't quietly stop working.
+- **Errors are values, and they are tags.** The domain returns `Result<T, E>`;
+  failures travel as `{ kind: 'empty-name' }`, not as English sentences. The
+  adapter (`cli/src/report.ts`) decides the wording, the language and the exit
+  code, exhaustively — add a tag and the build breaks until it is handled. A
+  `try/catch` wraps one port call, never a use-case body, so a genuine bug still
+  crashes instead of arriving as a polite `{ ok: false }`.
+- **Parse, don't validate.** `HourOfDay` is branded with a `unique symbol`, so it
+  can only be produced by `hourOfDay` — which makes `salutationFor` *total*, with
+  no defensive check and no error case to invent.
 - **Determinism is part of purity.** No `Date.now()`, `Math.random()`,
   `crypto.randomUUID()`, timers or `process.env` inside the hexagon — inject a
   port that yields the value. `Clock` is the worked example: `SystemClock` reads

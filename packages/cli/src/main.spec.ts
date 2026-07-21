@@ -45,9 +45,9 @@ describe('the CLI binary, run by plain node', () => {
     expect(stderr).toContain('usage: greet <name>')
   })
 
-  it('reports a domain error and exits 1', async () => {
+  it('reports a domain error and exits 2', async () => {
     const { code, stderr } = await runCli(['   '])
-    expect(code).toBe(1)
-    expect(stderr).toContain('name must not be empty')
+    expect(code).toBe(2)
+    expect(stderr).toContain('a name is required')
   })
 })
