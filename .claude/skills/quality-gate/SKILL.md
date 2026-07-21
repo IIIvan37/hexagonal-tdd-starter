@@ -23,7 +23,10 @@ pnpm gate
    (`core:domain` → nothing, `application` → `domain`, `cli` → `core:api`). Browser
    globals and `node:*` imports in the core are caught by Biome (step 2, override on
    `packages/core`), not by Sheriff.
-4. `pnpm test:coverage` — vitest with coverage thresholds on `packages/core`.
+4. `pnpm test:coverage` — vitest, **100 % thresholds on every file** (statements,
+   branches, functions, lines). Test-first means covered, so a drop is a
+   regression, not a budget. The only exclusion is `cli/src/main.ts`, the
+   `process.exit` boundary, covered by `main.spec.ts` running the real binary.
    Includes `packages/core/src/purity.spec.ts`, the **fitness function** for
    ambient state Biome cannot express (`Math.random()`, `Date.now()`,
    `process.env`, `globalThis.…`).
@@ -31,10 +34,9 @@ pnpm gate
    `index.ts` is the package entry, so a **core public export with no consumer
    yet is NOT flagged** — the application README registry and review are the
    guard there.
-6. `pnpm check:dup` — jscpd (copy-paste). Blocking via the **threshold ratchet**
-   in `.jscpd.json` (max duplicated-lines %, spec files excluded): the gate
-   fails when duplication grows past the budget. Lower the threshold as clones
-   get factored out — never raise it.
+6. `pnpm check:dup` — jscpd (copy-paste). `.jscpd.json` sets **threshold 0**
+   (spec files excluded): greenfield, so any clone fails the gate. Factor it
+   out — never raise the threshold.
 
 Individual pieces if needed: `pnpm typecheck`, `pnpm check:fix` (biome auto-fix),
 `pnpm check:arch`, `pnpm test`, `pnpm check:dead`, `pnpm check:dup`.
