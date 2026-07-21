@@ -35,8 +35,13 @@ build/spike that consumer first**. Don't invent the shape.
 ## 2. OUTER loop — failing acceptance test for the use-case
 
 - `packages/core/src/application/<verb-noun>.spec.ts`: write the use-case test
-  FIRST, with **fake ports** (in-memory stubs) standing in for the real adapters.
+  FIRST, with **fake ports** standing in for the real adapters — take them from
+  `@app/core/testing` (`InMemoryNameSource`, `InMemoryGreetingSink`,
+  `FailingNameSource`), don't hand-roll a stub. A new port means a new fake there.
   Assert the observable `Result` and what the fake received.
+- Add the slice's **end-to-end acceptance test** at the adapter level too:
+  `packages/cli/src/run.spec.ts` drives the real composition root in process,
+  doubling only the process boundary (stdout/stderr).
 - Define the use-case signature it forces:
   `packages/core/src/application/<verb-noun>.ts` — `(input, deps) => Promise<Result>`,
   `Result` an explicit ok/error union.
@@ -56,10 +61,20 @@ build/spike that consumer first**. Don't invent the shape.
 ## 4. Adapter in cli/web (the only impure code)
 
 - `packages/cli/src/adapters/<name>.ts` implements the port (fs, a client lib…);
-  web adapters use Web Audio / DOM. Wired in the entrypoint (`cli/src/main.ts`):
-  assemble input → inject real ports → map Result. Adapters may import `node:*` /
-  browser APIs — they live outside the hexagon.
+  web adapters use Web Audio / DOM. Wired in the composition root
+  (`cli/src/run.ts`): assemble input → inject real ports → map Result to an exit
+  code. Adapters may import `node:*` / browser APIs — they live outside the hexagon.
+- **Replay the port contract, don't rewrite it.** Every adapter spec calls the
+  suite from `@app/core/testing` (`nameSourceContract`, `greetingSinkContract`)
+  with a factory, then tests only what is specific to that implementation. A new
+  port means a new contract in `packages/core/src/testing/port-contracts.ts`,
+  first validated against its in-memory reference implementation.
 - Export the public surface from `packages/core/src/index.ts`.
+
+> Three test altitudes, on purpose: the **contract** says an adapter is
+> substitutable, the **acceptance test** (`run.spec.ts`) says the slice works
+> wired together, the **binary test** (`main.spec.ts`) says the shipped artefact
+> starts. Each catches what the others structurally cannot.
 
 > A new package (e.g. `packages/web`) is this recipe at package scale: a package
 > depending on `@app/core`, adapters implementing the EXISTING ports, no new core
