@@ -35,7 +35,8 @@ describe('the CLI binary, run by plain node', () => {
   it('greets the given name and exits 0', async () => {
     const { code, stdout } = await runCli(['Ada'])
     expect(code).toBe(0)
-    expect(stdout.trim()).toBe('Hello, Ada!')
+    // The real clock decides the salutation — see run.spec.ts.
+    expect(stdout.trim()).toMatch(/^Good (morning|afternoon|evening), Ada!$/)
   })
 
   it('prints usage and exits 2 when no name is given', async () => {

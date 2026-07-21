@@ -11,7 +11,15 @@ nothing else, so you can replace it with your own domain immediately.
   - the package graph (`@app/core` pure ← `@app/cli` adapter),
   - **Sheriff** (`sheriff.config.ts`) on the module graph,
   - **Biome** `noRestricted*` (override on `packages/core`) for the no-I/O /
-    no-browser-global purity invariant Sheriff can't see.
+    no-ambient-state purity invariant Sheriff can't see,
+  - a **fitness function** (`packages/core/src/purity.spec.ts`) for what neither
+    can express: `Math` is fine, `Math.random()` is not. It tests its own
+    detector, so it can't quietly stop working.
+- **Determinism is part of purity.** No `Date.now()`, `Math.random()`,
+  `crypto.randomUUID()`, timers or `process.env` inside the hexagon — inject a
+  port that yields the value. `Clock` is the worked example: `SystemClock` reads
+  the host, the core gets an `Instant` and does pure arithmetic on it, and a test
+  pins time with `FixedClock` instead of hoping CI runs in the morning.
 - **Blocking quality gate** (`pnpm gate`): TypeScript strict, Biome lint+format,
   Sheriff, vitest with coverage thresholds, knip (dead code), jscpd (duplication,
   threshold 0). Greenfield = no debt tolerated, a finding fails the build.
@@ -44,7 +52,7 @@ cd my-project
 corepack enable
 pnpm install
 pnpm gate          # everything green
-pnpm --filter @app/cli start Ada   # → Hello, Ada!
+pnpm --filter @app/cli start Ada   # → Good morning, Ada!
 ```
 
 Requires Node (see `.nvmrc`) and pnpm via Corepack.
@@ -55,7 +63,8 @@ Requires Node (see `.nvmrc`) and pnpm via Corepack.
 2. Replace the `greeting` slice with your domain, **outside-in**: write the
    use-case acceptance test first (`/new-feature-hexa`), let it pull the domain
    into existence (`/tdd-cycle`), then implement the adapter.
-3. Adjust the Biome core-purity denylist and the Sheriff tags/depRules as your
+3. Adjust the Biome core-purity denylist, the `purity.spec.ts` rules, and the
+   Sheriff tags/depRules as your
    layers grow (e.g. add `packages/web`).
 4. Keep `docs/STATUS.md` + `docs/sessions/` current via `/session-report`.
 

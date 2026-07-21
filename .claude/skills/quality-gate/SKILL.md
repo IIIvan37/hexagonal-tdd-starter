@@ -24,6 +24,9 @@ pnpm gate
    globals and `node:*` imports in the core are caught by Biome (step 2, override on
    `packages/core`), not by Sheriff.
 4. `pnpm test:coverage` — vitest with coverage thresholds on `packages/core`.
+   Includes `packages/core/src/purity.spec.ts`, the **fitness function** for
+   ambient state Biome cannot express (`Math.random()`, `Date.now()`,
+   `process.env`, `globalThis.…`).
 5. `pnpm check:dead` — knip (orphan exports / dead code). Caveat: `@app/core`'s
    `index.ts` is the package entry, so a **core public export with no consumer
    yet is NOT flagged** — the application README registry and review are the
@@ -43,6 +46,10 @@ Individual pieces if needed: `pnpm typecheck`, `pnpm check:fix` (biome auto-fix)
   between layers). A Biome `noRestricted*` violation = I/O or a global that slipped
   into `core`. Move the impure code into an adapter behind a port. To add/adjust a
   boundary rule: `sheriff.config.ts` (tags + depRules).
+- **purity fitness function**: a failure names the file, the line and the reason.
+  The fix is never to loosen the rule — it is to inject a port that yields the
+  value (`Clock` is the worked example). Add a rule when a new source of ambient
+  state appears.
 - **knip**: an orphan export = either wire it or delete it. No dead code "just in
   case".
 - **jscpd**: a clone = factor into a shared helper (often pure domain). Don't

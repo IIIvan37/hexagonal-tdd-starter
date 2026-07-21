@@ -4,11 +4,17 @@
 
 export {
   FailingNameSource,
+  FixedClock,
   InMemoryGreetingSink,
   InMemoryNameSource
 } from './in-memory-adapters.ts'
 export type {
+  ClockSubject,
   GreetingSinkSubject,
   NameSourceSubject
 } from './port-contracts.ts'
-export { greetingSinkContract, nameSourceContract } from './port-contracts.ts'
+export {
+  clockContract,
+  greetingSinkContract,
+  nameSourceContract
+} from './port-contracts.ts'

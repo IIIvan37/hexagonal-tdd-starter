@@ -10,6 +10,15 @@ import { run } from './run.ts'
  * Its sibling `main.spec.ts` runs the same slice as a real subprocess: slower,
  * uninstrumented, but the only proof the shipped binary starts at all.
  */
+/**
+ * The composition root wires the REAL `SystemClock`, so which salutation comes
+ * out depends on when the suite runs. That is deliberate: this altitude proves
+ * the slice is wired, not what the domain decides. Pinning the time belongs to
+ * `greet.spec.ts`, where a `FixedClock` is injected — which is the whole reason
+ * the clock is a port.
+ */
+const GREETING_TO_ADA = /^Good (morning|afternoon|evening), Ada!$/
+
 function captureOutput() {
   const out: string[] = []
   const err: string[] = []
@@ -33,7 +42,7 @@ describe('greet <name> — the CLI slice, end to end', () => {
     const code = await run(['Ada'])
 
     expect(code).toBe(0)
-    expect(out).toEqual(['Hello, Ada!'])
+    expect(out).toEqual([expect.stringMatching(GREETING_TO_ADA)])
   })
 
   it('trims the name on the way through the domain', async () => {
@@ -41,7 +50,7 @@ describe('greet <name> — the CLI slice, end to end', () => {
 
     await run(['  Ada  '])
 
-    expect(out).toEqual(['Hello, Ada!'])
+    expect(out).toEqual([expect.stringMatching(GREETING_TO_ADA)])
   })
 
   it('rejects a missing name with a usage message', async () => {

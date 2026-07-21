@@ -55,6 +55,11 @@ build/spike that consumer first**. Don't invent the shape.
   `tdd-cycle`: one assertion, fake-it, triangulate).
 - Pure functions over your model. No `node:*`, no globals (Biome `noRestricted*` +
   Sheriff enforce it). New domain sub-folder? Add its tag to `sheriff.config.ts`.
+- **Ambient state is a port, never a global.** Time, randomness, IDs, env config:
+  the moment a domain function wants one, stop and inject a port that yields the
+  value. `Clock` is the worked example — `SystemClock` reads the host, the core
+  receives an `Instant` and does pure arithmetic, `FixedClock` pins it in tests.
+  `packages/core/src/purity.spec.ts` fails the gate if you forget.
 - `fast-check` for cross-input invariants.
 - Stop when the outer acceptance test goes green. No extra domain API.
 
