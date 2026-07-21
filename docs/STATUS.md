@@ -6,31 +6,33 @@
 
 ## Where we are
 
-- **Phase**: fresh starter. Monorepo, toolchain and blocking guardrails in place;
-  one example hexagonal vertical slice runs end-to-end (`greet <name>`).
-- **Branch**: `main` (clean).
+- **Phase**: starter hardened. A 7-PR stack is open, reviewed and green locally,
+  waiting to be merged into `main`.
+- **Branch**: `fix/bounded-project-state` (tip of the stack).
 - **Packages**: `@app/core` (pure hexagon, plus `@app/core/testing` for the port
   contracts and fakes) and `@app/cli` (adapters). Add `packages/web` as needed.
+- **Health**: 109 tests, 100 % coverage, 100 % mutation score (62 mutants).
+  **CI has verified none of it** — GitHub Actions is blocked on account billing
+  since 2026-07-17, which predates this work.
 
 ## Next action
 
-Replace the `greeting` example slice with your real domain, outside-in
-(`/new-feature-hexa`): write the use-case acceptance test first, let it pull the
-domain into existence, then implement the adapter.
+Merge the stack in order **#10 → #11 → #12 → #13 → #14 → #15 → #16**, then the
+Dependabot PRs #9 (expect a `ci.yml` conflict with #15) and #8. Unblock Actions
+billing first, or nothing is verified remotely.
 
 ## Current milestone
-
-Only the milestone in flight and the next one. Collapse finished milestones to a
-single line — `git log` and the session reports hold the detail.
 
 | Step | Description | Status |
 |------|-------------|--------|
 | 0 | Starter bootstrapped (monorepo, toolchain, guardrails, example slice) | ✅ |
-| 1 | _your first real feature_ | ⬜ |
+| 1 | Hardening: runnable bin, port contracts, `Clock`, typed errors, bounded docs | 🔄 stack open |
+| 2 | _your first real feature_ | ⬜ |
 
 ## Open questions
 
-Genuinely undecided, blocking or ambiguous. Delete each one the moment it is
-resolved: a resolved question is either an [ADR](adr/) or nothing at all.
-
-- _(none)_
+- **Does the suite pass on Windows?** #15 adds it to the CI matrix, but that
+  matrix has never run. The path bug it targets was real; the rest is unverified.
+- **Is a build step wanted eventually?** Deferred in
+  [ADR-0001](adr/0001-strip-only-typescript-no-build-step.md) — revisit if this
+  ever ships to npm.
