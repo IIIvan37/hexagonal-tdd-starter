@@ -54,9 +54,13 @@ Individual pieces if needed: `pnpm typecheck`, `pnpm check:fix` (biome auto-fix)
   state appears.
 - **knip**: an orphan export = either wire it or delete it. No dead code "just in
   case".
-- **jscpd**: a clone = factor into a shared helper (often pure domain). Don't
-  duplicate across strategies/variants. A threshold failure means the new code
-  added duplication — factor it out rather than bumping `.jscpd.json`.
+- **jscpd**: a clone demands a DECISION, not automatically a merge — three
+  exits: **factor** (same knowledge, changes together), **mark deliberate**
+  (`// jscpd:ignore-start`/`-end` + a one-line reason — coincidental likeness,
+  or a boundary crossing like domain type vs adapter DTO), or **when unsure,
+  keep the duplication** — the wrong abstraction costs more than the clone
+  (Metz), and the test net makes late factoring cheap. Never bump the
+  threshold in `.jscpd.json`; never `ignore` without the reason line.
 
 ## Before declaring done
 

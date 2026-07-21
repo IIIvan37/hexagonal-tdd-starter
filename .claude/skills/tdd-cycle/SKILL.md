@@ -53,7 +53,27 @@ cross-layer dependency.
 ## REFACTOR — clean under green
 
 - Improve names/structure/duplication with the tests as a safety net.
-- `jscpd` is blocking (threshold 0): factor any copy-paste into a shared helper.
+- **Structural and behavioral changes never share a commit** (Beck, *Tidy
+  First?*). Commit the green behavior first (`feat:`/`fix:`), then refactor and
+  commit that separately (`refactor:`). A `refactor:` diff reviews as "nothing
+  observable changed"; mixing the two destroys that property for both halves.
+- **A clone found by jscpd has three exits, not one** (threshold 0 stays —
+  every clone demands a *decision*, not necessarily a merge):
+  1. **Factor** — when both sites encode the SAME knowledge and would always
+     change together.
+  2. **Mark deliberate** — `// jscpd:ignore-start` … `// jscpd:ignore-end`
+     with a one-line reason, when the similarity is coincidental or crosses a
+     boundary (a domain type and an adapter DTO may look identical; unifying
+     them welds the wire format to the model — the very coupling the hexagon
+     exists to prevent).
+  3. **When unsure, keep the duplication.** "Duplication is far cheaper than
+     the wrong abstraction" (Sandi Metz), and the rule of three says wait for
+     the third occurrence — 100 % coverage + mutation make late factoring
+     cheap and safe.
+- **Listen to the tests** (GOOS, Freeman & Pryce): a test that is painful to
+  write is design feedback, not a testing problem. Too many fakes to wire →
+  the unit has too many dependencies; an endless arrange → the concept is cut
+  wrong. Fix the design, not the test.
 - Tests must stay green. If you change behavior, that's a new RED.
 
 ## Close the cycle

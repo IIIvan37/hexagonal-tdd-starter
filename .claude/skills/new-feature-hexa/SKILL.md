@@ -103,7 +103,11 @@ build/spike that consumer first**. Don't invent the shape.
   CANNOT flag a core public export that nothing consumes — it only catches
   orphans inside packages. For the core surface, YOU are the check: before
   exporting from `index.ts`, name the consumer (adapter, use-case, or the next
-  slice that pulls it); if you can't, don't export it yet.
+  slice that pulls it); if you can't, don't export it yet. ("You are the
+  check" is the arrangement that failed for STATUS.md — a fitness function
+  asserting *every `index.ts` export has a consumer outside the core* is
+  planned to close this hole mechanically; Hyrum's Law is why the surface must
+  stay minimal: every export becomes a dependency you can never retract.)
 - Append the new use-case/port to `packages/core/src/application/README.md`.
 
 ## 6. Close the step

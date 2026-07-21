@@ -82,6 +82,18 @@ The extraction procedure — the part that was not understood until spelled out:
    consumer), or the edge becomes a **declared exception**. When the gate is
    green the module is both discovered and closed.
 
+   This is the **Mikado method** (Ellnestam & Brolund) with Sheriff drawing
+   the prerequisite graph — which imports Mikado's stop rule: **if resolving a
+   violation raises further violations more than ~2 levels deep, revert the
+   whole move**, extract or promote the prerequisites first as their own
+   steps, then retry. An extraction is one Mikado leaf, never a campaign.
+
+4. **Depth check before closing** (Ousterhout, *deep modules*): compare the
+   module's export count to its file count. A module whose surface grows as
+   fast as its contents is a folder wearing a module's clothes — either the
+   boundary is wrong, or the concept was not ready to extract. Small
+   interface, large implementation is what the boundary is *for*.
+
 ### The ratchet
 
 **Features may not import the nursery** (the reverse is allowed). An extracted

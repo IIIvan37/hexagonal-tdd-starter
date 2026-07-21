@@ -41,6 +41,6 @@ order, then Dependabot #9 (`ci.yml` conflict expected) and #8.
 - **Module boundaries**: strategy proposed in
   [ADR-0006](adr/0006-emergent-feature-modules.md), three decisions open before
   PR9 (example placement, sequencing, discovery aid).
-- **jscpd doctrine**: threshold 0 stays, but "a clone = factor it" is to be
-  softened into three exits (factor / mark deliberate / when unsure, duplicate)
-  — not yet written into the skills.
+- **Public-surface fitness function**: assert every `core/src/index.ts` export
+  has a consumer outside the core (closes the documented knip blind spot).
+  Doctrine written; the spec itself is code — pair it with PR9.

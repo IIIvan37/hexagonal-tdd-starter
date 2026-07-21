@@ -25,9 +25,12 @@ lost". Everything durable is in [ADR-0006](../adr/0006-emergent-feature-modules.
   signal-in-the-ritual (rule of three on prefixes), pre-wired dormant Sheriff
   placeholders, gate-enumerated extraction, features-cannot-import-nursery
   ratchet, shared-by-promotion.
-- Prior discussion, same session: jscpd threshold 0 kept but the "a clone =
-  factor it" doctrine to be softened (three exits: factor / mark deliberate /
-  when unsure, duplicate). Not yet implemented — fold into PR9 or a doc PR.
+- **Practices doctrine written and shipped in this PR**: Tidy First
+  (structural ≠ behavioral commits, in /tdd-cycle + CONTRIBUTING), the jscpd
+  three-exits doctrine (Metz + rule of three, in /tdd-cycle + /quality-gate),
+  Mikado stop rule + Ousterhout depth check (in ADR-0006), GOOS
+  "listen to the tests" (/tdd-cycle), small-batches stack bound (CONTRIBUTING),
+  and a one-place bibliography (CONTRIBUTING "The ideas behind the rules").
 
 ## Not done / remaining
 
@@ -56,6 +59,8 @@ lost". Everything durable is in [ADR-0006](../adr/0006-emergent-feature-modules.
 - **Single next action**: answer ADR-0006's three open decisions, then
   implement PR9 accordingly (placeholders + ratchet + skill updates + eject
   revalidation, same discipline as #17: injected violation, worktree check).
+  PR9 also carries the public-surface fitness function (every index.ts export
+  has an external consumer — doctrine already in /new-feature-hexa).
 - Gotchas:
   - The loupe analysis is reproducible: import-graph + prefix-cluster script
     over `packages/core/src/{domain,application}` — 10 lines of python; the
