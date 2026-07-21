@@ -17,9 +17,11 @@
 
 ## Next action
 
-Open PR #17, then merge the stack **#10 → … → #16 → #17** in order, then the
-Dependabot PRs #9 (expect a `ci.yml` conflict with #15) and #8. Unblock Actions
-billing first, or nothing is verified remotely.
+Settle the three open decisions of
+[ADR-0006](adr/0006-emergent-feature-modules.md) (emergent feature modules:
+greet placement, sequencing, `modules:hint`), then implement them as PR9.
+In parallel: unblock Actions billing, merge the stack **#10 → … → #17** in
+order, then Dependabot #9 (`ci.yml` conflict expected) and #8.
 
 ## Current milestone
 
@@ -36,3 +38,9 @@ billing first, or nothing is verified remotely.
 - **Is a build step wanted eventually?** Deferred in
   [ADR-0001](adr/0001-strip-only-typescript-no-build-step.md) — revisit if this
   ever ships to npm.
+- **Module boundaries**: strategy proposed in
+  [ADR-0006](adr/0006-emergent-feature-modules.md), three decisions open before
+  PR9 (example placement, sequencing, discovery aid).
+- **jscpd doctrine**: threshold 0 stays, but "a clone = factor it" is to be
+  softened into three exits (factor / mark deliberate / when unsure, duplicate)
+  — not yet written into the skills.

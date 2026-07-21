@@ -34,3 +34,4 @@ accepted ADR — supersede it with a new one and update the old one's status.
 | [0003](0003-ambient-state-behind-ports.md) | Ambient state goes behind a port, and three layers enforce it | accepted |
 | [0004](0004-errors-as-tagged-values.md) | Expected failures are tagged values; bugs are left to crash | accepted |
 | [0005](0005-bounded-project-state.md) | Project-state docs are bounded, and the bound is mechanical | accepted |
+| [0006](0006-emergent-feature-modules.md) | Feature modules are discovered, not decreed (emergent modularity) | proposed |
