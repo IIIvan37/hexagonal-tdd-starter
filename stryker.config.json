@@ -17,6 +17,7 @@
     "break": 80
   },
   "tempDirName": ".stryker-tmp",
+  "incrementalFile": "reports/stryker-incremental.json",
   "htmlReporter": {
     "fileName": "reports/mutation/index.html"
   },

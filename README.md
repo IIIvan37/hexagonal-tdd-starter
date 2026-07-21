@@ -67,6 +67,24 @@ pnpm --filter @app/cli start Ada   # → Good morning, Ada!
 
 Requires Node (see `.nvmrc`) and pnpm via Corepack.
 
+## After cloning: protect `main` on GitHub
+
+The husky hooks and `block-commit-on-main` only guard **your machine**. A
+collaborator, or you on another checkout, can push straight to `main` unless the
+remote enforces it too:
+
+```sh
+gh api -X PUT repos/:owner/:repo/branches/main/protection \
+  -F required_pull_request_reviews.required_approving_review_count=0 \
+  -F 'required_status_checks[strict]=true' \
+  -F 'required_status_checks[contexts][]=Quality gate (ubuntu-latest)' \
+  -F 'required_status_checks[contexts][]=Commit messages' \
+  -F enforce_admins=true \
+  -F restrictions=null
+```
+
+Without this, the local hooks are a convention, not a guarantee.
+
 ## Make it yours
 
 1. Rename the packages (`@app/core`, `@app/cli`) and the root `name`.
@@ -90,4 +108,11 @@ packages/cli/src/run.ts         composition root (testable in process)
 packages/cli/src/main.ts        entrypoint — the process boundary, nothing else
 .claude/skills                  the method, as Claude Code skills
 docs/STATUS.md, docs/sessions   resumable project state
+docs/adr                        why the constraints exist (read before removing one)
 ```
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the loop and the non-negotiables, and
+[docs/adr/](docs/adr/) for the reasoning behind them. Licensed under
+[MIT](LICENSE).

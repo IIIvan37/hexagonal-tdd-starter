@@ -34,6 +34,12 @@ Then run the quality gate and record the result:
   (with the results from step 1), State to resume from.
 - "State to resume from" must name the SINGLE next action and any gotchas /
   half-done edits.
+- **Decisions is a log, not an explanation.** If the step changed a boundary, an
+  invariant or the toolchain, write the reasoning once as an ADR in
+  [docs/adr/](../../../docs/adr/) (copy `_TEMPLATE.md`, add it to the index) and
+  link it from this section. Never restate the why in both places — a report is
+  read to resume, an ADR is read months later by someone about to undo the
+  constraint. Most steps need no ADR.
 
 ## 3. Update the canonical STATUS
 
