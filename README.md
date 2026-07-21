@@ -107,7 +107,8 @@ packages/cli/src/adapters       port implementations (I/O lives here)
 packages/cli/src/run.ts         composition root (testable in process)
 packages/cli/src/main.ts        entrypoint — the process boundary, nothing else
 .claude/skills                  the method, as Claude Code skills
-docs/STATUS.md, docs/sessions   resumable project state
+docs/STATUS.md                  the present state — bounded, rewritten, never a log
+docs/sessions                   rolling window of the 5 last reports (+ archive/)
 docs/adr                        why the constraints exist (read before removing one)
 ```
 

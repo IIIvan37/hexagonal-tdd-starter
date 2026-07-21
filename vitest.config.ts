@@ -7,7 +7,9 @@ export default defineConfig({
     // implicit globals were dead config — and an explicit import is what makes a
     // spec readable on its own.
     environment: 'node',
-    include: ['packages/*/src/**/*.spec.ts'],
+    // `docs/` holds no code — only the fitness function that keeps the
+    // project-state docs bounded (docs/docs.spec.ts).
+    include: ['packages/*/src/**/*.spec.ts', 'docs/**/*.spec.ts'],
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],
