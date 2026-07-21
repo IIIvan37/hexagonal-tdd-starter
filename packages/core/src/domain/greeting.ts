@@ -1,3 +1,4 @@
+import { err, ok, type Result } from './result.ts'
 import type { Salutation } from './salutation.ts'
 
 /**
@@ -10,18 +11,27 @@ export interface Greeting {
   readonly message: string
 }
 
+/** Why a name could not become a greeting. A closed set, so callers can be exhaustive. */
+export type GreetingError = { readonly kind: 'empty-name' }
+
 /**
  * Pure: a name and a salutation in, a greeting out. Trims, and rejects an empty
- * name.
+ * name — as a `Result`, not an exception. An empty name is untrusted input
+ * failing to parse, which is an ordinary outcome, not an emergency; and the
+ * error is a *tag*, not a sentence, so the adapter owns the wording (and the
+ * language).
  *
  * Note what is NOT here: deciding *which* salutation applies needs the current
  * time, and reading a clock is I/O. The caller passes the salutation in — see
  * `salutationFor` (pure) and the `Clock` port (impure, adapter-side).
  */
-export function buildGreeting(name: string, salutation: Salutation): Greeting {
+export function buildGreeting(
+  name: string,
+  salutation: Salutation
+): Result<Greeting, GreetingError> {
   const recipient = name.trim()
   if (recipient === '') {
-    throw new Error('name must not be empty')
+    return err({ kind: 'empty-name' })
   }
-  return { recipient, message: `${salutation}, ${recipient}!` }
+  return ok({ recipient, message: `${salutation}, ${recipient}!` })
 }

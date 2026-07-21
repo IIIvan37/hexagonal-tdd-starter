@@ -19,7 +19,7 @@ describe('greet — when the source provides a name', () => {
       sink: new InMemoryGreetingSink(),
       clock: atNineAm
     })
-    expect(result).toEqual({ ok: true, recipient: 'Ada' })
+    expect(result).toEqual({ ok: true, value: { recipient: 'Ada' } })
   })
 
   it('emits the greeting through the sink port', async () => {
@@ -50,32 +50,14 @@ describe('greet — when the source provides a name', () => {
   })
 })
 
-describe('greet — when the input is invalid or the source fails', () => {
-  it('turns a domain error into a typed Result', async () => {
+describe('greet — when the input is invalid or a port fails', () => {
+  it('surfaces a domain error by its tag, not by a message', async () => {
     const result = await greet({
       source: new InMemoryNameSource('   '),
       sink: new InMemoryGreetingSink(),
       clock: atNineAm
     })
-    expect(result).toEqual({ ok: false, error: 'name must not be empty' })
-  })
-
-  it('reports a source failure as a typed error', async () => {
-    const result = await greet({
-      source: new FailingNameSource('no input'),
-      sink: new InMemoryGreetingSink(),
-      clock: atNineAm
-    })
-    expect(result).toEqual({ ok: false, error: 'no input' })
-  })
-
-  it('stringifies a rejected non-Error value', async () => {
-    const result = await greet({
-      source: { load: () => Promise.reject('plain failure') },
-      sink: new InMemoryGreetingSink(),
-      clock: atNineAm
-    })
-    expect(result).toEqual({ ok: false, error: 'plain failure' })
+    expect(result).toEqual({ ok: false, error: { kind: 'empty-name' } })
   })
 
   it('emits nothing when the greeting cannot be built', async () => {
@@ -86,5 +68,60 @@ describe('greet — when the input is invalid or the source fails', () => {
       clock: atNineAm
     })
     expect(sink.saved()).toEqual([])
+  })
+
+  it('tags a failing source distinctly, keeping the cause', async () => {
+    const result = await greet({
+      source: new FailingNameSource('no input'),
+      sink: new InMemoryGreetingSink(),
+      clock: atNineAm
+    })
+    expect(result).toEqual({
+      ok: false,
+      error: { kind: 'source-unavailable', cause: 'no input' }
+    })
+  })
+
+  it('tags a failing sink distinctly, keeping the cause', async () => {
+    const result = await greet({
+      source: new InMemoryNameSource('Ada'),
+      sink: {
+        save: () => Promise.reject(new Error('stdout closed'))
+      },
+      clock: atNineAm
+    })
+    expect(result).toEqual({
+      ok: false,
+      error: { kind: 'sink-unavailable', cause: 'stdout closed' }
+    })
+  })
+
+  it('describes a rejected non-Error value', async () => {
+    const result = await greet({
+      source: { load: () => Promise.reject('plain failure') },
+      sink: new InMemoryGreetingSink(),
+      clock: atNineAm
+    })
+    expect(result).toEqual({
+      ok: false,
+      error: { kind: 'source-unavailable', cause: 'plain failure' }
+    })
+  })
+
+  it('lets a programming error crash instead of disguising it as a Result', async () => {
+    // The old blanket try/catch turned this TypeError into a polite
+    // `{ ok: false }`, indistinguishable from a business rule. It must escape.
+    const brokenClock = {
+      now: () => {
+        throw new TypeError('clock is broken')
+      }
+    }
+    await expect(
+      greet({
+        source: new InMemoryNameSource('Ada'),
+        sink: new InMemoryGreetingSink(),
+        clock: brokenClock
+      })
+    ).rejects.toThrow(TypeError)
   })
 })

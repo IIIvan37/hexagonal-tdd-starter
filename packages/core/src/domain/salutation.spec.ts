@@ -1,6 +1,13 @@
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
+import { hourOfDay } from './instant.ts'
 import { salutationFor } from './salutation.ts'
+
+// The ONLY way to get an `HourOfDay` is to parse an instant — which is the point
+// of the brand. A test cannot fabricate an out-of-range hour, and neither can
+// production code.
+const at = (hour: number) =>
+  hourOfDay({ epochMs: hour * 3_600_000, offsetMinutes: 0 })
 
 describe('salutationFor', () => {
   it.each([
@@ -13,24 +20,15 @@ describe('salutationFor', () => {
     [18, 'Good evening'],
     [23, 'Good evening']
   ])('greets hour %i with "%s"', (hour, expected) => {
-    expect(salutationFor(hour)).toBe(expected)
+    expect(salutationFor(at(hour))).toBe(expected)
   })
 
-  it('rejects an hour outside the clock', () => {
-    expect(() => salutationFor(24)).toThrow(/hour/)
-    expect(() => salutationFor(-1)).toThrow(/hour/)
-  })
-
-  it('rejects a fractional hour', () => {
-    expect(() => salutationFor(9.5)).toThrow(/hour/)
-  })
-
-  // Property: every valid hour maps to one of the three salutations.
-  it('always yields a known salutation for a valid hour', () => {
+  // Property: every hour of the clock maps to a salutation. Totality, checked.
+  it('is total over the whole clock', () => {
     fc.assert(
       fc.property(fc.integer({ min: 0, max: 23 }), (hour) => {
         expect(['Good morning', 'Good afternoon', 'Good evening']).toContain(
-          salutationFor(hour)
+          salutationFor(at(hour))
         )
       })
     )

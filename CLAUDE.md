@@ -53,6 +53,16 @@ not.
    for member expressions Biome cannot express (`Math.random()`).
 2. **Outside-in.** The domain is a supplier, pulled into existence by a consumer
    need (a use-case / acceptance test) — never written speculatively.
+3. **Expected failures are values; bugs crash.** The domain returns
+   `Result<T, E>` (`domain/result.ts`), never throws for a business rule. Errors
+   are **tags** (`{ kind: 'empty-name' }`), never sentences — the adapter owns
+   the wording, the language and the exit code (`cli/src/report.ts`, exhaustive
+   via `exhausted(error: never)`). `try/catch` wraps a **single port call**, never
+   a whole use-case body: a blanket catch disguises a `TypeError` as a business
+   outcome.
+4. **Parse, don't validate.** Prefer making illegal states unrepresentable over
+   defensive checks — `HourOfDay` is branded (`unique symbol`) so `salutationFor`
+   is total and has no error branch to test.
 
 ## Working method
 

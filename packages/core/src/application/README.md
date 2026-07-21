@@ -9,6 +9,17 @@ The single place to look before adding a feature, so ports and use-cases get
 |----------|-----------|-------|
 | `greet` | `(deps) => Promise<GreetResult>` | Example slice — load a name, read the clock, build a time-aware greeting, emit it. |
 
+Failures are a `Result` carrying a **tag**, never a message:
+
+| Tag | Raised when | CLI renders it as |
+|-----|-------------|-------------------|
+| `empty-name` | the name does not parse (domain) | `a name is required`, exit 2 |
+| `source-unavailable` | the `NameSource` adapter threw | `could not read the name: …`, exit 69 |
+| `sink-unavailable` | the `GreetingSink` adapter threw | `could not emit the greeting: …`, exit 69 |
+
+Adding a tag breaks `packages/cli/src/report.ts` until it is handled — that
+exhaustiveness is the reason the wording lives there and not in the core.
+
 ## Ports
 
 | Port | Kind | Contract | Implemented by |

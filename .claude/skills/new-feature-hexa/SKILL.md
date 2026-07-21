@@ -43,8 +43,14 @@ build/spike that consumer first**. Don't invent the shape.
   `packages/cli/src/run.spec.ts` drives the real composition root in process,
   doubling only the process boundary (stdout/stderr).
 - Define the use-case signature it forces:
-  `packages/core/src/application/<verb-noun>.ts` — `(input, deps) => Promise<Result>`,
-  `Result` an explicit ok/error union.
+  `packages/core/src/application/<verb-noun>.ts` — `(deps) => Promise<Result<T, E>>`
+  using `domain/result.ts`. `E` is a union of **tags** (`{ kind: '…' }`), never a
+  message: the adapter owns the wording and the exit code (`cli/src/report.ts`),
+  and its `switch` must stay exhaustive via `exhausted(error: never)`.
+- `try/catch` goes around a **single port call**, mapped to its own tag. Never
+  wrap the use-case body — that turns a `TypeError` into a fake business outcome.
+- Prefer removing an error case over handling it: if a precondition can be
+  encoded in a type (see the branded `HourOfDay`), the function becomes total.
 - It fails because the domain it calls doesn't exist yet. Good — that failure is
   your to-do list for the inner loop.
 

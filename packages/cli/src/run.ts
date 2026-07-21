@@ -2,10 +2,12 @@ import { greet } from '@app/core'
 import { ArgvNameSource } from './adapters/argv-name-source.ts'
 import { ConsoleGreetingSink } from './adapters/console-greeting-sink.ts'
 import { SystemClock } from './adapters/system-clock.ts'
+import { EXIT_MISUSE, EXIT_OK, report } from './report.ts'
 
 /**
  * Composition root: parse argv, inject the real ports into the use-case, map the
- * Result to an exit code. No business logic here.
+ * Result to an exit code. No business logic here — wording and exit codes live
+ * in `report.ts`.
  *
  * Kept separate from `main.ts` so the whole slice stays testable in process —
  * `main.ts` owns only the process boundary (`process.exit`), which a test cannot
@@ -15,7 +17,7 @@ export async function run(argv: readonly string[]): Promise<number> {
   const name = argv[0]
   if (name === undefined) {
     console.error('usage: greet <name>')
-    return 2
+    return EXIT_MISUSE
   }
 
   const result = await greet({
@@ -25,8 +27,9 @@ export async function run(argv: readonly string[]): Promise<number> {
   })
 
   if (!result.ok) {
-    console.error(`✖ ${result.error}`)
-    return 1
+    const { message, code } = report(result.error)
+    console.error(`✖ ${message}`)
+    return code
   }
-  return 0
+  return EXIT_OK
 }

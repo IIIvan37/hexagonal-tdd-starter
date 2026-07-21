@@ -63,13 +63,31 @@ describe('greet <name> — the CLI slice, end to end', () => {
     expect(err).toEqual(['usage: greet <name>'])
   })
 
-  it('surfaces a domain error without printing a greeting', async () => {
+  it('words the domain error itself, and exits on misuse', async () => {
     const { out, err } = captureOutput()
 
     const code = await run(['   '])
 
-    expect(code).toBe(1)
+    // The core reported `{ kind: 'empty-name' }`; the wording and the exit code
+    // are this adapter's decision, which is exactly what tagging errors buys.
+    expect(code).toBe(2)
     expect(out).toEqual([])
-    expect(err[0]).toContain('name must not be empty')
+    expect(err).toEqual(['✖ a name is required'])
+  })
+
+  it('survives a broken stdout and reports it as unavailability', async () => {
+    const errors: string[] = []
+    // A closed pipe (`greet Ada | head -0`) is the realistic version of this.
+    vi.spyOn(console, 'log').mockImplementation(() => {
+      throw new Error('EPIPE')
+    })
+    vi.spyOn(console, 'error').mockImplementation((line: string) => {
+      errors.push(line)
+    })
+
+    const code = await run(['Ada'])
+
+    expect(code).toBe(69)
+    expect(errors).toEqual(['✖ could not emit the greeting: EPIPE'])
   })
 })
