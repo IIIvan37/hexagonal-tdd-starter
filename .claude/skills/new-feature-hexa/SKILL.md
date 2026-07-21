@@ -89,7 +89,10 @@ build/spike that consumer first**. Don't invent the shape.
 
 > A new package (e.g. `packages/web`) is this recipe at package scale: a package
 > depending on `@app/core`, adapters implementing the EXISTING ports, no new core
-> code unless a port is genuinely missing.
+> code unless a port is genuinely missing. Wire BOTH boundary tools for it:
+> a Sheriff tag + depRule (`sheriff.config.ts`), and a Biome override banning
+> `@app/core/testing` outside `*.spec.ts` (copy the `packages/cli` override in
+> `biome.json`) — Sheriff cannot split a package by file pattern.
 
 ## 5. Prove it & register
 

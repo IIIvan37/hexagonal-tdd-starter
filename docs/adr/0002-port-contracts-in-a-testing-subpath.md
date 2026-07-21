@@ -38,8 +38,13 @@ layer.
 
 - Adding an adapter means calling the contract, not inventing port tests. Adding
   a port means writing its contract and its fake in the same step.
-- Production code **cannot** import a fake — the boundary is structural, not a
-  convention.
+- Production code **cannot** import a fake — enforced by two different tools,
+  because neither covers both cases alone: Sheriff keeps every core production
+  tag away from `core:testing`, but its `cli` tag covers the whole package and
+  cannot exempt spec files, so for cli the rule is a Biome `noRestrictedImports`
+  override (`packages/cli/src/**`, `!**/*.spec.ts`). Adding an adapter package
+  means adding both its Sheriff tag **and** its Biome override — the checklist
+  in `/new-feature-hexa` says so.
 - This is the only part of the core allowed to depend on vitest, which is a real
   wart: the "pure" package now has a test-framework dependency in one corner.
   Accepted because the alternative (a fourth package) costs more than it saves at

@@ -3,10 +3,22 @@
   "compilerOptions": {
     "noEmit": true,
     "types": ["node"],
+    // LOAD-BEARING for Sheriff, not a tsc convenience: sheriff resolves the
+    // '@app/core' specifier through these paths. Verified by removing them —
+    // `check:arch` stays green while enforcing NOTHING on cli→core:api edges
+    // (0 violations where the same config with paths reports 5). tsc and vitest
+    // both resolve via the package `exports` and don't need this. Renaming the
+    // packages means updating exports (packages/core/package.json) AND here.
     "paths": {
       "@app/core": ["./packages/core/src/index.ts"],
       "@app/core/testing": ["./packages/core/src/testing/index.ts"]
     }
   },
-  "include": ["packages/*/src", "docs", "*.config.ts", "sheriff.config.ts"]
+  "include": [
+    "packages/*/src",
+    "docs",
+    "scripts",
+    "*.config.ts",
+    "sheriff.config.ts"
+  ]
 }

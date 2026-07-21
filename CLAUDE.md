@@ -20,7 +20,7 @@ domain.
   CI post-merge. Kept out of `gate` (too slow per commit).
 - `pnpm typecheck` / `pnpm check` / `pnpm check:fix` / `pnpm check:arch`
   / `pnpm check:dead` / `pnpm check:dup`.
-- Run the example: `pnpm --filter @app/cli start <name>`.
+- Run the example: `pnpm greet <name>`.
 
 ## Architecture (hexagonal)
 

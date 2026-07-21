@@ -62,10 +62,11 @@ cd my-project
 corepack enable
 pnpm install
 pnpm gate          # everything green
-pnpm --filter @app/cli start Ada   # → Good morning, Ada!
+pnpm greet Ada     # → Good {morning,afternoon,evening}, Ada! — the real clock decides
 ```
 
-Requires Node (see `.nvmrc`) and pnpm via Corepack.
+Requires Node ≥ 24 (see `.nvmrc`) — not a whim: the bin runs the `.ts` sources
+through Node's native type stripping, no build step — and pnpm via Corepack.
 
 ## After cloning: protect `main` on GitHub
 
@@ -74,26 +75,75 @@ collaborator, or you on another checkout, can push straight to `main` unless the
 remote enforces it too:
 
 ```sh
-gh api -X PUT repos/:owner/:repo/branches/main/protection \
-  -F required_pull_request_reviews.required_approving_review_count=0 \
-  -F 'required_status_checks[strict]=true' \
-  -F 'required_status_checks[contexts][]=Quality gate (ubuntu-latest)' \
-  -F 'required_status_checks[contexts][]=Commit messages' \
-  -F enforce_admins=true \
-  -F restrictions=null
+gh api -X PUT repos/{owner}/{repo}/branches/main/protection --input - <<'EOF'
+{
+  "required_status_checks": {
+    "strict": true,
+    "contexts": ["Quality gate (ubuntu-latest)", "Commit messages"]
+  },
+  "required_pull_request_reviews": { "required_approving_review_count": 0 },
+  "enforce_admins": true,
+  "restrictions": null
+}
+EOF
 ```
 
+(JSON via `--input` on purpose: `gh api -F` cannot express the `null` that this
+endpoint requires for `restrictions`.)
+
 Without this, the local hooks are a convention, not a guarantee.
+
+## Anatomy: skeleton vs example
+
+The `greet` slice is a **worked example, not a feature** — it exists to be read
+once and replaced. Every file that belongs to it carries a first-line marker:
+
+```sh
+grep -rln "EXAMPLE" packages     # the full list, always current
+```
+
+| Marker | Meaning |
+|--------|---------|
+| `EXAMPLE … DELETE` | dies with the example slice |
+| `EXAMPLE CONTENT, SKELETON ROLE` | keep the file, replace its contents: the composition root (`run.ts`), the error mapping (`report.ts`), the index exports, and the three test altitudes |
+| `KEEP` | generic skeleton that only *looks* example-adjacent (`domain/result.ts`) |
+
+Everything unmarked (toolchain, hooks, `purity.spec.ts`, `docs/`) is skeleton.
+
+### Tearing out the example
+
+```sh
+pnpm eject:example                          # driven by the markers above
+pnpm install && pnpm check:fix && pnpm gate # → green, empty skeleton
+```
+
+The script ([scripts/eject-example.ts](scripts/eject-example.ts)) deletes the
+`DELETE`-marked files, rewrites the `SKELETON ROLE` ones as minimal stubs — the
+three test altitudes stay alive, so the strip-only invariant remains locked even
+before your first feature — empties the registry, and removes the two
+dependencies knip would rightly flag (`@app/core` in `cli`, `fast-check`;
+re-add them the moment a feature needs them). `domain/result.ts` and its spec
+are kept: coverage is 100 % per file, a kept file keeps its spec.
+
+Doing it by hand instead? The blind run costs four failed gate passes — follow
+the script's source as the checklist.
+
+Then: `/new-feature-hexa`, outside-in.
 
 ## Make it yours
 
 1. Rename the packages (`@app/core`, `@app/cli`) and the root `name`.
-2. Replace the `greeting` slice with your domain, **outside-in**: write the
-   use-case acceptance test first (`/new-feature-hexa`), let it pull the domain
-   into existence (`/tdd-cycle`), then implement the adapter.
+   The specifier lives in **two places** that must stay in sync: the package
+   `exports` (`packages/core/package.json`) — which tsc, vitest and the bin all
+   resolve through — and the `paths` in `tsconfig.json`, which exist **only for
+   Sheriff** (without them `check:arch` goes green-but-blind on package imports;
+   the comment there has the details).
+2. Tear out the example (see **Anatomy** above), then build your first real
+   slice outside-in (`/new-feature-hexa`, `/tdd-cycle`).
 3. Adjust the Biome core-purity denylist, the `purity.spec.ts` rules, and the
-   Sheriff tags/depRules as your
-   layers grow (e.g. add `packages/web`).
+   Sheriff tags/depRules as your layers grow. A new adapter package needs BOTH
+   its Sheriff tag and a Biome override banning `@app/core/testing` outside
+   specs (copy the `packages/cli` one).
 4. Keep `docs/STATUS.md` + `docs/sessions/` current via `/session-report`.
 
 ## Layout

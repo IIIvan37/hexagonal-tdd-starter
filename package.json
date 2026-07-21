@@ -8,6 +8,8 @@
   },
   "packageManager": "pnpm@10.11.0",
   "scripts": {
+    "greet": "pnpm --filter @app/cli start",
+    "eject:example": "node scripts/eject-example.ts",
     "typecheck": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",

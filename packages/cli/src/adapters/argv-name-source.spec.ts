@@ -1,3 +1,4 @@
+// EXAMPLE (greet slice) — DELETE with your first real feature. Removal guide: README "Anatomy".
 import { nameSourceContract } from '@app/core/testing'
 import { describe, expect, it } from 'vitest'
 import { ArgvNameSource } from './argv-name-source.ts'

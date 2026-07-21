@@ -1,5 +1,8 @@
 # Application registry (use-cases + ports)
 
+> The registry itself is SKELETON — keep this file. Every row below describes
+> the `greet` EXAMPLE and goes away with it (README "Anatomy").
+
 The single place to look before adding a feature, so ports and use-cases get
 **reused, not reinvented** (`/new-feature-hexa`). Keep this in sync.
 

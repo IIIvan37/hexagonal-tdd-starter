@@ -8,7 +8,7 @@
 
 - **Phase**: starter hardened. A 7-PR stack is open, reviewed and green locally,
   waiting to be merged into `main`.
-- **Branch**: `fix/bounded-project-state` (tip of the stack).
+- **Branch**: `fix/dx-hardening` (tip of the stack, 8 PRs).
 - **Packages**: `@app/core` (pure hexagon, plus `@app/core/testing` for the port
   contracts and fakes) and `@app/cli` (adapters). Add `packages/web` as needed.
 - **Health**: 109 tests, 100 % coverage, 100 % mutation score (62 mutants).
@@ -17,7 +17,7 @@
 
 ## Next action
 
-Merge the stack in order **#10 → #11 → #12 → #13 → #14 → #15 → #16**, then the
+Open PR #17, then merge the stack **#10 → … → #16 → #17** in order, then the
 Dependabot PRs #9 (expect a `ci.yml` conflict with #15) and #8. Unblock Actions
 billing first, or nothing is verified remotely.
 
@@ -26,7 +26,7 @@ billing first, or nothing is verified remotely.
 | Step | Description | Status |
 |------|-------------|--------|
 | 0 | Starter bootstrapped (monorepo, toolchain, guardrails, example slice) | ✅ |
-| 1 | Hardening: runnable bin, port contracts, `Clock`, typed errors, bounded docs | 🔄 stack open |
+| 1 | Hardening: runnable bin, contracts, `Clock`, typed errors, bounded docs, DX (ejectable example, fakes ban, safe pre-commit) | 🔄 stack open |
 | 2 | _your first real feature_ | ⬜ |
 
 ## Open questions

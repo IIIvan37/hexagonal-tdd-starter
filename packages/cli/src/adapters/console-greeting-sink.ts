@@ -1,3 +1,4 @@
+// EXAMPLE (greet slice) — DELETE with your first real feature. Removal guide: README "Anatomy".
 import type { Greeting, GreetingSink } from '@app/core'
 
 /** Driven adapter: the greeting is printed to stdout. */

@@ -1,3 +1,4 @@
+// EXAMPLE (greet slice) — DELETE with your first real feature. Removal guide: README "Anatomy".
 import { buildGreeting, type GreetingError } from '../domain/greeting.ts'
 import { hourOfDay } from '../domain/instant.ts'
 import { err, ok, type Result } from '../domain/result.ts'
@@ -26,8 +27,9 @@ export type GreetError =
 
 export type GreetResult = Result<{ readonly recipient: string }, GreetError>
 
-/** Describe a thrown value without assuming it is an `Error`. */
-function describe(thrown: unknown): string {
+/** Describe a thrown value without assuming it is an `Error`. (Not `describe` —
+ * that name belongs to vitest in every reader's head.) */
+function describeThrown(thrown: unknown): string {
   return thrown instanceof Error ? thrown.message : String(thrown)
 }
 
@@ -48,7 +50,7 @@ export async function greet(deps: GreetDeps): Promise<GreetResult> {
   try {
     name = await deps.source.load()
   } catch (thrown) {
-    return err({ kind: 'source-unavailable', cause: describe(thrown) })
+    return err({ kind: 'source-unavailable', cause: describeThrown(thrown) })
   }
 
   const salutation = salutationFor(hourOfDay(deps.clock.now()))
@@ -60,7 +62,7 @@ export async function greet(deps: GreetDeps): Promise<GreetResult> {
   try {
     await deps.sink.save(greeting.value)
   } catch (thrown) {
-    return err({ kind: 'sink-unavailable', cause: describe(thrown) })
+    return err({ kind: 'sink-unavailable', cause: describeThrown(thrown) })
   }
 
   return ok({ recipient: greeting.value.recipient })

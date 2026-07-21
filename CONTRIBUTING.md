@@ -4,6 +4,12 @@ This repository is a **method as much as a codebase**. The rules below are not
 style preferences — each one is enforced by a tool, and the tools are what make
 the method survive contact with a deadline.
 
+> **About the `/slash-commands` below**: `/tdd-cycle`, `/new-feature-hexa`,
+> `/quality-gate` and `/session-report` are [Claude Code](https://claude.com/claude-code)
+> skills. Without Claude Code they are still the method — each one is a plain
+> markdown checklist in [.claude/skills/](.claude/skills/), written to be
+> followed by a human.
+
 ## Setup
 
 ```sh
@@ -23,6 +29,14 @@ Node comes from [`.nvmrc`](.nvmrc); pnpm from Corepack.
    existence. Never write core code without a red test.
 3. **`pnpm gate`** — typecheck, Biome, Sheriff, tests at 100 % coverage, knip,
    jscpd. Blocking, and it also runs in `pre-commit`.
+
+   **Consequence, stated plainly: a red or uncovered tree cannot be committed.**
+   That is the method (red → green → refactor happens in the working tree, only
+   green states get committed). For a genuine exception — an exploratory spike,
+   a WIP checkpoint before switching machines — `git commit --no-verify` on a
+   feature branch is tolerated: CI re-runs the full gate on the PR, and `main`
+   is protected regardless. Never `--no-verify` on `main`, and never merge a PR
+   whose gate is red.
 4. **`pnpm test:mutation`** before opening the PR. Coverage says a line ran;
    mutation says a test would have noticed it change.
 5. **`/session-report`** — the report ships inside the PR.

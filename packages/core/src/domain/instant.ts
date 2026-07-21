@@ -1,3 +1,4 @@
+// EXAMPLE (greet slice) — DELETE with your first real feature. Removal guide: README "Anatomy".
 /**
  * A point in time, as the domain needs it: an epoch offset plus the shift that
  * turns it into a wall clock. Both are plain numbers on purpose.

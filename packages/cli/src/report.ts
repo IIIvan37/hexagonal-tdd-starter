@@ -1,3 +1,4 @@
+// EXAMPLE CONTENT, SKELETON ROLE — keep this file, rewrite its contents for your slice. See README "Anatomy".
 import type { GreetError } from '@app/core'
 
 /** Exit codes, as a CLI convention — a presentation concern, not a domain one. */

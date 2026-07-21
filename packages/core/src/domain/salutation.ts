@@ -1,3 +1,4 @@
+// EXAMPLE (greet slice) — DELETE with your first real feature. Removal guide: README "Anatomy".
 import type { HourOfDay } from './instant.ts'
 
 /** How the greeting opens, decided by the local wall-clock hour. */

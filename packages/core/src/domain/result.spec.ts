@@ -1,3 +1,4 @@
+// KEEP — generic skeleton, not part of the greet example. Every slice reuses this.
 import { describe, expect, it } from 'vitest'
 import { err, isErr, isOk, ok } from './result.ts'
 

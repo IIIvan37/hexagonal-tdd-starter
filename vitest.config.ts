@@ -1,6 +1,9 @@
-import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vitest/config'
 
+// No `resolve.alias` for '@app/core' on purpose: vitest resolves it through the
+// workspace symlink + the package `exports` map, the same path production takes.
+// One less place to update when renaming the packages. (tsconfig `paths` still
+// exist, but for a different reader: Sheriff — see the comment there.)
 export default defineConfig({
   test: {
     // No `globals: true`: every spec imports from 'vitest' explicitly, so the
@@ -34,19 +37,6 @@ export default defineConfig({
           lines: 100
         }
       }
-    }
-  },
-  resolve: {
-    alias: {
-      // fileURLToPath, not URL.pathname: on Windows the latter yields
-      // "/C:/…", which is not a usable filesystem path.
-      // Longest specifier first: '@app/core' would otherwise shadow the subpath.
-      '@app/core/testing': fileURLToPath(
-        new URL('./packages/core/src/testing/index.ts', import.meta.url)
-      ),
-      '@app/core': fileURLToPath(
-        new URL('./packages/core/src/index.ts', import.meta.url)
-      )
     }
   }
 })
