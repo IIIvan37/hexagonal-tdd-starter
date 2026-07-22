@@ -23,21 +23,19 @@ interface ForbiddenPattern {
   readonly why: string
 }
 
+// A REFERENCE is enough to be impure (`const f = Date.now` smuggles the same
+// ambient state as the call), so no pattern below requires the `(`.
 const FORBIDDEN: readonly ForbiddenPattern[] = [
   {
-    pattern: /\bMath\s*\.\s*random\s*\(/,
+    pattern: /\bMath\s*\.\s*random\b/,
     why: 'ambient randomness — inject a port that yields the value'
   },
   {
-    pattern: /\bDate\s*\.\s*now\s*\(/,
+    pattern: /\b(?:Date|performance)\s*\.\s*now\b/,
     why: 'ambient time — inject the `Clock` port'
   },
   {
-    pattern: /\bperformance\s*\.\s*now\s*\(/,
-    why: 'ambient time — inject the `Clock` port'
-  },
-  {
-    pattern: /\bcrypto\s*\.\s*(randomUUID|getRandomValues)\s*\(/,
+    pattern: /\bcrypto\s*\.\s*(randomUUID|getRandomValues)\b/,
     why: 'ambient randomness — inject a port that yields the value'
   },
   {
@@ -45,8 +43,15 @@ const FORBIDDEN: readonly ForbiddenPattern[] = [
     why: 'ambient configuration — pass it in as a value'
   },
   {
-    pattern: /\bglobalThis\s*\./,
+    pattern: /\bglobalThis\s*[.[]/,
     why: 'ambient state — the core takes its dependencies as arguments'
+  },
+  {
+    // `Math["random"]` reaches the same ambient state while hiding the member
+    // name from the patterns above — so computed access on an ambient global
+    // is banned as a form: use dot access, which the detector can read.
+    pattern: /\b(?:Math|Date|crypto|performance|process)\s*\[/,
+    why: 'computed access on an ambient global — use dot access so this detector can see what you reach for'
   },
   {
     pattern: /\brequire\s*\(/,
@@ -115,7 +120,14 @@ describe('the detector itself', () => {
     ['const id = crypto.randomUUID()', 'randomness'],
     ['const home = process.env.HOME', 'configuration'],
     ['globalThis.cache = {}', 'state'],
-    ['const fs = require("node:fs")', 'module loading']
+    ['const fs = require("node:fs")', 'module loading'],
+    // Evasions of the dot-access patterns: computed access on an ambient
+    // global, and grabbing the function without calling it.
+    ['const n = Math["random"]()', 'computed access'],
+    ["const id = crypto['randomUUID']()", 'computed access'],
+    ['globalThis["cache"] = {}', 'state'],
+    ['const now = Date.now', 'reference without a call'],
+    ['const rand = Math.random', 'reference without a call']
   ])('flags %j', (source) => {
     expect(findImpurities(source)).toHaveLength(1)
   })

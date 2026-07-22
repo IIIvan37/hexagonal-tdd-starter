@@ -23,6 +23,32 @@ import { describe, expect, it } from 'vitest'
 const CORE_SRC = fileURLToPath(new URL('.', import.meta.url))
 const WORKSPACE = resolve(CORE_SRC, '../../..')
 
+/** Blank out comments: whole-line `//` ones, and block comments. */
+function blankComments(source: string): string {
+  return source
+    .replace(/\/\*[\s\S]*?\*\//g, ' ')
+    .split('\n')
+    .map((line) => (/^\s*\/\//.test(line) ? '' : line))
+    .join('\n')
+}
+
+/**
+ * Everything in a barrel source that the orphan check below cannot read.
+ *
+ * `valueExportsOf` is lexical, so it is only sound if the surface file sticks
+ * to the one grammar it parses: named `export [type] { … } from` clauses,
+ * comments, blanks. An `export *`, a default export or a value defined inline
+ * would be public yet invisible — the check would pass while guarding nothing.
+ * This closes that fail-open hole by rejecting the forms, not parsing them.
+ */
+function barrelViolationsOf(source: string): readonly string[] {
+  return blankComments(source)
+    .replace(/export\s+(?:type\s+)?\{[^}]*\}\s+from\s+'[^']*'/g, '')
+    .split('\n')
+    .map((line) => line.trim())
+    .filter((line) => line !== '')
+}
+
 /** Named VALUE exports of a barrel: `export { a, b } from …` (not `export type`). */
 function valueExportsOf(source: string): readonly string[] {
   const clauses = source.matchAll(/export\s+\{([^}]*)\}/g)
@@ -67,6 +93,33 @@ function walk(dir: string): string[] {
 }
 
 describe('the detector itself', () => {
+  it.each([
+    ["export * from './greeting.ts'", 'a wildcard hides every name'],
+    ['export function helper() {}', 'a value defined in the barrel itself'],
+    ['export default greet', 'a default export has no importable name'],
+    [
+      "import { greet } from './greet/application/greet.ts'",
+      'a barrel re-exports, it does not import'
+    ]
+  ])('rejects %j (%s)', (line) => {
+    expect(barrelViolationsOf(line)).toHaveLength(1)
+  })
+
+  it('accepts the full grammar: comments, export {} from, export type {} from', () => {
+    const source = [
+      '// a comment',
+      '/* a block',
+      '   comment */',
+      "export { greet } from './a.ts'",
+      'export type {',
+      '  GreetDeps,',
+      '  GreetResult',
+      "} from './a.ts'",
+      ''
+    ].join('\n')
+    expect(barrelViolationsOf(source)).toEqual([])
+  })
+
   it('finds value exports and skips type-only ones', () => {
     const source = [
       "export { greet } from './a.ts'",
@@ -93,12 +146,31 @@ describe('the detector itself', () => {
       importsFromCore("import { greet } from '@app/core/testing'", 'greet')
     ).toBe(false)
   })
+
+  it('does not count a namespace import as a consumer — on purpose', () => {
+    // `import * as core` depends on everything and therefore justifies
+    // nothing: it would mark every export consumed and disarm the orphan
+    // check. Failing closed is the point — name what you consume.
+    expect(importsFromCore("import * as core from '@app/core'", 'greet')).toBe(
+      false
+    )
+  })
 })
 
 describe('the core public surface is consumer-justified', () => {
   const surface = readFileSync(join(CORE_SRC, 'index.ts'), 'utf8')
   const exported = valueExportsOf(surface)
   const consumers = outsideCoreSources().map((p) => readFileSync(p, 'utf8'))
+
+  it('sticks to the grammar the orphan check can read', () => {
+    expect(
+      barrelViolationsOf(surface),
+      '\ncore/src/index.ts contains a form the orphan check below cannot' +
+        '\nparse (export *, a default export, an inline value, an import).' +
+        '\nSuch an export would be public yet unchecked — rewrite it as a' +
+        "\nnamed `export { … } from '…'` clause."
+    ).toEqual([])
+  })
 
   // One test over the whole list, not it.each: an EMPTY surface is legitimate
   // (the ejected skeleton starts there), and vitest fails a suite that
