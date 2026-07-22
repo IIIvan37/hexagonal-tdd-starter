@@ -1,7 +1,8 @@
 // EXAMPLE (greet slice) — DELETE with your first real feature. Removal guide: README "Anatomy".
+
+import { err, ok, type Result } from '../../shared/result.ts'
 import { buildGreeting, type GreetingError } from '../domain/greeting.ts'
 import { hourOfDay } from '../domain/instant.ts'
-import { err, ok, type Result } from '../domain/result.ts'
 import { salutationFor } from '../domain/salutation.ts'
 import type { Clock, GreetingSink, NameSource } from './ports.ts'
 

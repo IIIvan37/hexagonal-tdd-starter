@@ -5,7 +5,7 @@ import {
   FixedClock,
   InMemoryGreetingSink,
   InMemoryNameSource
-} from '../testing/index.ts'
+} from '../testing/in-memory-adapters.ts'
 import { greet } from './greet.ts'
 
 // 09:00 UTC — the time is pinned, so these tests read the same at any hour.
