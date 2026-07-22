@@ -44,7 +44,7 @@ build/spike that consumer first**. Don't invent the shape.
   doubling only the process boundary (stdout/stderr).
 - Define the use-case signature it forces:
   `packages/core/src/application/<verb-noun>.ts` — `(deps) => Promise<Result<T, E>>`
-  using `domain/result.ts`. `E` is a union of **tags** (`{ kind: '…' }`), never a
+  using `shared/result.ts`. `E` is a union of **tags** (`{ kind: '…' }`), never a
   message: the adapter owns the wording and the exit code (`cli/src/report.ts`),
   and its `switch` must stay exhaustive via `exhausted(error: never)`.
 - `try/catch` goes around a **single port call**, mapped to its own tag. Never
@@ -96,7 +96,7 @@ build/spike that consumer first**. Don't invent the shape.
 > wired together, the **binary test** (`main.spec.ts`) says the shipped artefact
 > starts. Each catches what the others structurally cannot.
 
-> A new package (e.g. `packages/web`) is this recipe at package scale: a package
+> A new package (say, a hypothetical `web` one) is this recipe at package scale: a package
 > depending on `@app/core`, adapters implementing the EXISTING ports, no new core
 > code unless a port is genuinely missing. Wire BOTH boundary tools for it:
 > a Sheriff tag + depRule (`sheriff.config.ts`), and a Biome override banning
