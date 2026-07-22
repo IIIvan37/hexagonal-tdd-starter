@@ -100,18 +100,20 @@ describe('the core public surface is consumer-justified', () => {
   const exported = valueExportsOf(surface)
   const consumers = outsideCoreSources().map((p) => readFileSync(p, 'utf8'))
 
-  // No "at least one export" guard on purpose: an EMPTY surface is legitimate
-  // (the ejected skeleton starts there). The detector's own tests above are
-  // what keep the regexes honest, not a floor on the export count.
-  it.each(
-    exported.map((name) => [name])
-  )('%s is imported by at least one file outside the core', (name) => {
-    const used = consumers.some((source) => importsFromCore(source, name))
+  // One test over the whole list, not it.each: an EMPTY surface is legitimate
+  // (the ejected skeleton starts there), and vitest fails a suite that
+  // generates zero tests. The detector's own tests above are what keep the
+  // regexes honest, not a floor on the export count.
+  it('every value export is imported somewhere outside the core', () => {
+    const orphans = exported.filter(
+      (name) => !consumers.some((source) => importsFromCore(source, name))
+    )
     expect(
-      used,
-      `\n'${name}' is exported from core/src/index.ts but no adapter imports it.` +
+      orphans,
+      `\nExported from core/src/index.ts but imported by no adapter: ` +
+        `${orphans.join(', ')}.` +
         '\nName the consumer or remove the export (a supplier without a' +
         '\nconsumer is the speculation invariant #2 forbids).'
-    ).toBe(true)
+    ).toEqual([])
   })
 })
