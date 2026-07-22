@@ -88,7 +88,9 @@ function walk(dir: string): string[] {
     if (entry.isDirectory()) {
       return walk(path)
     }
-    return entry.name.endsWith('.ts') ? [path] : []
+    const isProduction =
+      entry.name.endsWith('.ts') && !entry.name.endsWith('.spec.ts')
+    return isProduction ? [path] : []
   })
 }
 
@@ -145,6 +147,14 @@ describe('the detector itself', () => {
     expect(
       importsFromCore("import { greet } from '@app/core/testing'", 'greet')
     ).toBe(false)
+  })
+
+  it('never reads an adapter spec as a consumer', () => {
+    // An export imported only by an adapter SPEC has no production consumer —
+    // counting it would let a test justify public surface. Hyrum's Law does
+    // not care that the dependant is a test file.
+    const specs = outsideCoreSources().filter((p) => p.endsWith('.spec.ts'))
+    expect(specs).toEqual([])
   })
 
   it('does not count a namespace import as a consumer — on purpose', () => {
