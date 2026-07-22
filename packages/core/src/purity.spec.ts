@@ -94,6 +94,33 @@ function findImpurities(source: string): readonly Impurity[] {
     )
 }
 
+/** Module specifiers a source reaches for: static, dynamic, side-effect, re-export. */
+function specifiersOf(source: string): readonly string[] {
+  const code = withoutComments(source)
+  return [
+    ...code.matchAll(/\bfrom\s+['"]([^'"]+)['"]/g),
+    ...code.matchAll(/\bimport\s*\(\s*['"]([^'"]+)['"]/g),
+    ...code.matchAll(/\bimport\s+['"]([^'"]+)['"]/g)
+  ].map((m) => m[1] ?? '')
+}
+
+/**
+ * The hexagon imports nothing but itself: every specifier in a core production
+ * file must be relative. This is the non-enumerative closure of Biome's
+ * `noRestrictedImports` list — an enumeration of `node:` modules ages with
+ * every Node release (`node:sqlite`, `node:zlib`, … were never on it), and a
+ * bare legacy name (`fs`) or a stray npm package is the same hole. One
+ * documented seam: the port contracts in a `testing/` folder run on vitest.
+ */
+function foreignSpecifiersIn(source: string, path: string): readonly string[] {
+  return specifiersOf(source).filter((spec) => {
+    if (spec.startsWith('./') || spec.startsWith('../')) {
+      return false
+    }
+    return !(spec === 'vitest' && path.includes('/testing/'))
+  })
+}
+
 /** Every non-spec `.ts` file under the core, recursively. */
 function coreSources(dir: string): readonly string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -161,6 +188,50 @@ describe('the detector itself', () => {
   })
 })
 
+describe('the foreign-import detector itself', () => {
+  const anyCorePath = 'packages/core/src/greet/domain/greeting.ts'
+
+  it.each([
+    [
+      "import { gzipSync } from 'node:zlib'",
+      'a node: builtin Biome does not enumerate'
+    ],
+    ['import { DatabaseSync } from "node:sqlite"', 'double quotes'],
+    ["const z = await import('node:zlib')", 'a dynamic import'],
+    ["import { readFileSync } from 'fs'", 'a bare legacy builtin'],
+    ["import Big from 'big.js'", 'an npm package'],
+    ["import 'reflect-metadata'", 'a side-effect import'],
+    ["export { x } from 'node:util'", 'a re-export']
+  ])('flags %j (%s)', (source) => {
+    expect(foreignSpecifiersIn(source, anyCorePath)).toHaveLength(1)
+  })
+
+  it.each([
+    "import { greet } from './greet.ts'",
+    "export type { Result } from '../shared/result.ts'",
+    "const lazy = await import('./heavy.ts')"
+  ])('leaves %j alone', (source) => {
+    expect(foreignSpecifiersIn(source, anyCorePath)).toEqual([])
+  })
+
+  it('allows vitest inside a testing/ folder only', () => {
+    const source = "import { describe, expect, it } from 'vitest'"
+    expect(
+      foreignSpecifiersIn(
+        source,
+        'packages/core/src/greet/testing/port-contracts.ts'
+      )
+    ).toEqual([])
+    expect(foreignSpecifiersIn(source, anyCorePath)).toEqual(['vitest'])
+  })
+
+  it('ignores a specifier that only appears in prose', () => {
+    expect(
+      foreignSpecifiersIn("// don't import from 'node:fs' here", anyCorePath)
+    ).toEqual([])
+  })
+})
+
 describe('the core stays free of ambient state', () => {
   const sources = coreSources(coreRoot)
 
@@ -174,5 +245,16 @@ describe('the core stays free of ambient state', () => {
       .map(({ line, why, text }) => `  line ${line}: ${text}\n    → ${why}`)
       .join('\n')
     expect(impurities, `\n${path}\n${report}`).toEqual([])
+  })
+
+  it.each(sources)('%s imports nothing but the core itself', (path) => {
+    const foreign = foreignSpecifiersIn(readFileSync(path, 'utf8'), path)
+    expect(
+      foreign,
+      `\n${path} imports foreign modules: ${foreign.join(', ')}.` +
+        '\nThe hexagon has zero production dependencies — I/O and ambient' +
+        '\nstate live in an adapter behind a port. (vitest is allowed in' +
+        '\na testing/ folder only.)'
+    ).toEqual([])
   })
 })
