@@ -113,11 +113,13 @@ function specifiersOf(source: string): readonly string[] {
  * documented seam: the port contracts in a `testing/` folder run on vitest.
  */
 function foreignSpecifiersIn(source: string, path: string): readonly string[] {
+  // The Windows CI leg hands us backslash paths — compare in posix.
+  const posixPath = path.replaceAll('\\', '/')
   return specifiersOf(source).filter((spec) => {
     if (spec.startsWith('./') || spec.startsWith('../')) {
       return false
     }
-    return !(spec === 'vitest' && path.includes('/testing/'))
+    return !(spec === 'vitest' && posixPath.includes('/testing/'))
   })
 }
 
@@ -228,6 +230,17 @@ describe('the foreign-import detector itself', () => {
   it('ignores a specifier that only appears in prose', () => {
     expect(
       foreignSpecifiersIn("// don't import from 'node:fs' here", anyCorePath)
+    ).toEqual([])
+  })
+
+  it('recognises a testing/ folder under Windows separators too', () => {
+    // The Windows CI leg walks real paths with backslashes; the seam must
+    // not silently close there (its first run proved it did).
+    expect(
+      foreignSpecifiersIn(
+        "import { describe, expect, it } from 'vitest'",
+        'packages\\core\\src\\greet\\testing\\port-contracts.ts'
+      )
     ).toEqual([])
   })
 })

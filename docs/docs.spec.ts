@@ -168,7 +168,11 @@ function resolvesInRepo(
   if (existsSync(resolve(docDir, clean)) || existsSync(resolve(ROOT, clean))) {
     return true
   }
-  return paths.some((p) => p === clean || p.endsWith(`/${clean}`))
+  // The Windows CI leg walks backslash paths; doc mentions use slashes.
+  return paths.some((p) => {
+    const posix = p.replaceAll('\\', '/')
+    return posix === clean || posix.endsWith(`/${clean}`)
+  })
 }
 
 /** The living docs: everything that claims to describe the present. */
@@ -241,6 +245,17 @@ describe('the path detector itself', () => {
       )
     ).toBe(true)
     expect(resolvesInRepo('no-such/no-file.ts', ROOT, paths)).toBe(false)
+  })
+
+  it('matches suffixes across Windows separators too', () => {
+    // On the Windows CI leg, repoPaths() yields backslash-separated paths;
+    // doc mentions always use forward slashes. Its first run proved the
+    // comparison must bridge the two.
+    expect(
+      resolvesInRepo('cli/src/report.ts', ROOT, [
+        'packages\\cli\\src\\report.ts'
+      ])
+    ).toBe(true)
   })
 })
 
