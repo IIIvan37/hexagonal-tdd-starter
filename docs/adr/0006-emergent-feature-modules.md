@@ -1,7 +1,8 @@
 # ADR 0006 — Feature modules are discovered, not decreed (emergent modularity)
 
-- **Status**: proposed — mechanism designed, three decisions still open (see the
-  end); implementation will be PR9.
+- **Status**: accepted (2026-07-22) — mechanism implemented and proven by
+  injected violations (6/6: ratchet, isolation, one-line exception, layer
+  discipline, nursery→feature descent, shared containment).
 - **Date**: 2026-07-21
 
 ## Context
@@ -131,12 +132,22 @@ decision (extract or promote) at the same moment.
   import cohesion), but naming a boundary is a domain act — at most a hint,
   never a verdict. Left as an open decision below.
 
-## Open decisions (to settle before PR9)
+## Decisions resolved at implementation (2026-07-22)
 
-1. **Where does the `greet` example live?** Extracted (`core/src/greet/…`,
-   showing the end state, nursery empty for the user's own files — leaning
-   this way) or in the nursery (models day zero faithfully, but nobody ever
-   sees an extracted feature)?
-2. **Sequencing**: PR9 stacked on #17 now, or after the stack merges, or
-   after writing loupe's target module map first to calibrate the mechanism?
-3. **`modules:hint`**: ship the discovery aid, or keep discovery fully human?
+1. **`greet` ships extracted** (`core/src/greet/{domain,application,testing}`):
+   the user sees both ends of the lifecycle — the empty nurseries where their
+   own files will be born, and next door what an extracted feature looks like.
+2. **Sequenced immediately after the stack merged** — implemented from a clean
+   `main`.
+3. **`modules:hint` shipped**, hint-only (prefix clusters + import cohesion
+   over the nursery); naming a boundary remains a human act.
+
+Implementation notes that matter later:
+- Sheriff placeholder syntax works and ALL of a module's tags must permit an
+  edge (proven by injection — e.g. a layer violation fires even when the
+  feature tag allows `sameTag`).
+- Sheriff **silently skips unresolvable imports**: a broken graph verifies
+  green. Harmless inside the gate — typecheck fails first — but never trust
+  `check:arch` alone on a tree whose imports may be stale.
+- Sheriff compiles its config through jiti with a filesystem cache
+  (`node_modules/.cache/jiti`); when scripting rapid config edits, purge it.

@@ -8,14 +8,14 @@ export {
   FixedClock,
   InMemoryGreetingSink,
   InMemoryNameSource
-} from './in-memory-adapters.ts'
+} from '../greet/testing/in-memory-adapters.ts'
 export type {
   ClockSubject,
   GreetingSinkSubject,
   NameSourceSubject
-} from './port-contracts.ts'
+} from '../greet/testing/port-contracts.ts'
 export {
   clockContract,
   greetingSinkContract,
   nameSourceContract
-} from './port-contracts.ts'
+} from '../greet/testing/port-contracts.ts'

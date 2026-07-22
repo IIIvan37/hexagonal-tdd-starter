@@ -25,7 +25,8 @@
     "check:dead": "knip",
     "check:dup": "jscpd packages",
     "gate": "pnpm run \"/^(typecheck|check|check:arch|test:coverage|check:dead|check:dup)$/\"",
-    "prepare": "husky"
+    "prepare": "husky",
+    "modules:hint": "node scripts/modules-hint.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.2.4",

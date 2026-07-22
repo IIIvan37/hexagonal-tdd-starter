@@ -9,7 +9,7 @@
     "packages/core/src/**/*.ts",
     "!packages/core/src/**/*.spec.ts",
     "!packages/core/src/index.ts",
-    "!packages/core/src/testing/**"
+    "!packages/core/src/**/testing/**"
   ],
   "thresholds": {
     "high": 90,

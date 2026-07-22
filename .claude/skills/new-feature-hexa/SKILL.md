@@ -56,11 +56,18 @@ build/spike that consumer first**. Don't invent the shape.
 
 ## 3. INNER loop — pull the domain into existence (TDD)
 
-- Only now create domain units, and only the ones the outer test demands:
-  `packages/core/src/domain/<name>.ts` (+ `<name>.spec.ts`, RED first per
-  `tdd-cycle`: one assertion, fake-it, triangulate).
+- Only now create domain units, and only the ones the outer test demands.
+  **Where they are born**: in the NURSERY (`packages/core/src/domain/<name>.ts`,
+  flat) when the concept is new — or directly inside an existing feature module
+  (`core/src/<feature>/domain/`) when it plainly belongs to one. Never invent a
+  feature folder for a first file: boundaries are discovered, not decreed
+  ([ADR-0006](../../../docs/adr/0006-emergent-feature-modules.md)).
+  (+ `<name>.spec.ts`, RED first per `tdd-cycle`: one assertion, fake-it,
+  triangulate.)
 - Pure functions over your model. No `node:*`, no globals (Biome `noRestricted*` +
-  Sheriff enforce it). New domain sub-folder? Add its tag to `sheriff.config.ts`.
+  Sheriff enforce it). No config edit is ever needed for a feature folder — the
+  Sheriff placeholder rules (`core/src/<feature>/…`) are dormant and pick it up
+  the moment it exists.
 - **Ambient state is a port, never a global.** Time, randomness, IDs, env config:
   the moment a domain function wants one, stop and inject a port that yields the
   value. `Clock` is the worked example — `SystemClock` reads the host, the core
@@ -78,8 +85,10 @@ build/spike that consumer first**. Don't invent the shape.
 - **Replay the port contract, don't rewrite it.** Every adapter spec calls the
   suite from `@app/core/testing` (`nameSourceContract`, `greetingSinkContract`)
   with a factory, then tests only what is specific to that implementation. A new
-  port means a new contract in `packages/core/src/testing/port-contracts.ts`,
-  first validated against its in-memory reference implementation.
+  port means a new contract + in-memory fake in its feature's `testing/` folder
+  (nursery ports: `core/src/testing/`), first validated against the fake, and
+  re-exported from the `core/src/testing/index.ts` barrel so adapters keep one
+  import path (`@app/core/testing`).
 - Export the public surface from `packages/core/src/index.ts`.
 
 > Three test altitudes, on purpose: the **contract** says an adapter is
@@ -94,20 +103,38 @@ build/spike that consumer first**. Don't invent the shape.
 > `@app/core/testing` outside `*.spec.ts` (copy the `packages/cli` override in
 > `biome.json`) — Sheriff cannot split a package by file pattern.
 
+## 4bis. Extraction — when a module becomes apparent
+
+The signal is the rule of three: a third file sharing a prefix/concept, a
+use-case + port serving a single cluster (`pnpm modules:hint` points at
+candidates; naming the boundary stays YOUR call). Then:
+
+1. **Name** the module.
+2. **`git mv` the whole slice's center** — domain files, its use-cases, its
+   ports (out of the nursery `ports.ts`), its fakes — into
+   `core/src/<name>/{domain,application,testing}`. Zero config edits.
+3. **Let the gate enumerate the frontier.** Each Sheriff violation is one
+   decision with three exits: join the module / promote to `shared/` (second
+   consumer only — never create there directly) / a declared one-line depRule
+   exception. Mikado stop rule: prerequisites deeper than ~2 levels → revert,
+   extract the prerequisites first.
+4. **Depth check** before closing (Ousterhout): exports vs files — a module
+   whose surface grows as fast as its contents was not ready.
+
+The ratchet holds automatically: a feature importing the nursery is a
+violation, so extraction only ever increases structure.
+
 ## 5. Prove it & register
 
 - Full gate green: `/quality-gate`. Knip must not flag a new orphan export — if it
   does, the export had no consumer (the very smell this skill prevents): wire it or
   delete it.
-- **Knip blind spot**: `@app/core`'s `index.ts` is the package entry, so knip
-  CANNOT flag a core public export that nothing consumes — it only catches
-  orphans inside packages. For the core surface, YOU are the check: before
-  exporting from `index.ts`, name the consumer (adapter, use-case, or the next
-  slice that pulls it); if you can't, don't export it yet. ("You are the
-  check" is the arrangement that failed for STATUS.md — a fitness function
-  asserting *every `index.ts` export has a consumer outside the core* is
-  planned to close this hole mechanically; Hyrum's Law is why the surface must
-  stay minimal: every export becomes a dependency you can never retract.)
+- **Public surface is fitness-checked**: `packages/core/src/public-surface.spec.ts`
+  fails the gate if a VALUE export of `index.ts` has no consumer outside the
+  core (its first run caught `buildGreeting`, exported since day one and
+  consumed by nobody). Type-only exports stay a review concern — structural
+  typing makes them lexically undetectable. Hyrum's Law is the stake: every
+  export becomes a dependency you can never retract.
 - Append the new use-case/port to `packages/core/src/application/README.md`.
 
 ## 6. Close the step

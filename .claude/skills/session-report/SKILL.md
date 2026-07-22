@@ -25,6 +25,10 @@ Then run the quality gate and record the result:
   must be caught **before** the PR, while the code is fresh. Skip only when the
   step touched no mutated package (say so).
 - Don't fabricate a green check — report failures honestly.
+- **Module watch** (ADR-0006): does a prefix/concept now appear >= 3 times in
+  the nursery? does a use-case + port serve a single cluster? `pnpm
+  modules:hint` points at candidates. If yes, note it under "Decisions" as a
+  pending extraction — or extract before closing (/new-feature-hexa 4bis).
 
 ## 2. Append a dated session report
 

@@ -7,14 +7,20 @@
 //     stubs that keep the skeleton's guarantees alive (the three test
 //     altitudes still run — the binary stub test keeps the strip-only
 //     invariant locked even before your first feature);
-//   - files marked  "KEEP" (domain/result.ts + spec) are untouched.
+//   - files marked  "KEEP" (shared/result.ts + spec) are untouched.
 //
 // It also drops the two dependencies knip would rightly flag as unused after
 // the eject (`@app/core` in cli, `fast-check` at the root). Re-add them the
 // moment your first feature needs them:
 //   pnpm add -D fast-check && pnpm --filter <your-cli> add '@app/core@workspace:*'
 
-import { readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs'
+import {
+  readdirSync,
+  readFileSync,
+  rmdirSync,
+  rmSync,
+  writeFileSync
+} from 'node:fs'
 import { join } from 'node:path'
 
 const DELETE_MARKER = 'EXAMPLE (greet slice) — DELETE'
@@ -162,6 +168,22 @@ for (const file of sourceFiles('packages')) {
     console.log(`  ✗ ${file}`)
   }
 }
+
+// The deletions empty the feature's folders (greet/domain, …): remove every
+// now-empty directory, deepest first, so no hollow module shells remain —
+// the nurseries keep their README and survive.
+function pruneEmptyDirs(dir: string): void {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    if (entry.isDirectory() && entry.name !== 'node_modules') {
+      pruneEmptyDirs(join(dir, entry.name))
+    }
+  }
+  if (readdirSync(dir).length === 0) {
+    rmdirSync(dir)
+    console.log(`  ✗ ${dir}/ (emptied)`)
+  }
+}
+pruneEmptyDirs('packages')
 
 console.log('\nSKELETON ROLE files, stubbed:')
 for (const [file, stub] of Object.entries(STUBS)) {

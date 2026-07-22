@@ -21,15 +21,25 @@ domain.
 - `pnpm typecheck` / `pnpm check` / `pnpm check:fix` / `pnpm check:arch`
   / `pnpm check:dead` / `pnpm check:dup`.
 - Run the example: `pnpm greet <name>`.
+- `pnpm modules:hint` — module candidates in the nursery (hint, never a verdict).
 
 ## Architecture (hexagonal)
 
 ```
 packages/
-  core/   — pure hexagon, no I/O. src/domain (model) + src/application (use-cases + ports).
-            src/index.ts is the only public surface adapters import.
-            src/testing (@app/core/testing) — port contracts + in-memory fakes,
-            consumed by adapter SPECS only, never by production code.
+  core/   — pure hexagon, no I/O.
+            src/domain + src/application — the NURSERY: new files are born flat
+              here; a module is extracted when it becomes apparent (ADR-0006).
+            src/<feature>/{domain,application,testing} — extracted feature
+              modules (`greet` is the worked example); Sheriff placeholders tag
+              them automatically, features are isolated by default and may
+              NEVER import the nursery.
+            src/shared — the kernel; grows by promotion (2nd consumer) only.
+            src/index.ts — the only public surface adapters import; a fitness
+              function (public-surface.spec.ts) fails the gate on any value
+              export without an external consumer.
+            src/testing (@app/core/testing) — barrel over feature test kits,
+              consumed by adapter SPECS only, never by production code.
   cli/     — Node adapters implementing the ports, composition root (src/run.ts),
             entrypoint (src/main.ts — the process boundary, nothing else).
 ```
@@ -68,9 +78,9 @@ not.
 
 - **TDD strict** (`/tdd-cycle`): red → green → refactor; never write core code
   without a failing test. Property tests (fast-check) for invariants.
-- **Ports are contract-tested.** Port obligations are written once in
-  `packages/core/src/testing/port-contracts.ts` and replayed by each adapter's
-  spec via a factory. Never restate port assertions in an adapter spec; never
+- **Ports are contract-tested.** Port obligations are written once in the
+  feature's `testing/` folder and replayed by each adapter's spec via a factory
+  (one import path for adapters: the `@app/core/testing` barrel). Never restate port assertions in an adapter spec; never
   hand-roll a fake when `@app/core/testing` has one.
 - **New feature** = a hexagonal vertical slice (`/new-feature-hexa`): pure domain +
   use-case/port in `core`, adapter in `cli`; register it in
