@@ -17,13 +17,18 @@ import { type SheriffConfig, sameTag } from '@softarc/sheriff-core'
  *
  * What Sheriff cannot see stays with Biome (ambient globals/imports in core,
  * fakes banned from cli production code) and with the fitness functions
- * (purity.spec.ts, public-surface.spec.ts). NOTE: Sheriff walks the graph from
- * the entry point, so *.spec.ts files are invisible to it — spec-only imports
- * are Biome's problem, not Sheriff's.
+ * (purity.spec.ts, public-surface.spec.ts). NOTE: Sheriff only walks the graph
+ * from the entry points, so *.spec.ts files are invisible to it — spec-only
+ * imports are Biome's problem, not Sheriff's. That is also why the testing
+ * barrel is an entry point of its own: adapter SPECS are its only consumers,
+ * so without it the whole testing subtree (and every rule about it) would be
+ * unverified — proven by injection: a nursery import in the barrel went green
+ * until the entry point existed.
  */
 export const config: SheriffConfig = {
   entryPoints: {
-    cli: 'packages/cli/src/main.ts'
+    cli: 'packages/cli/src/main.ts',
+    'core-testing': 'packages/core/src/testing/index.ts'
   },
   enableBarrelLess: true,
   modules: {
@@ -79,8 +84,10 @@ export const config: SheriffConfig = {
 
     // The public contract re-exports features, nursery use-cases and kernel.
     'core:api': ['feature:*', 'nursery', 'shared'],
-    // The testing barrel re-exports each feature's test kit.
-    'core:testing': ['feature:*', 'shared'],
+    // The testing barrel re-exports each feature's test kit — and the fakes of
+    // still-in-nursery ports, which live directly in core/src/testing until
+    // their module is extracted (see new-feature-hexa step 4).
+    'core:testing': ['feature:*', 'nursery', 'shared'],
     // Adapters consume the core's public contract; their SPECS also replay the
     // port contracts from the testing barrel (spec files are invisible to
     // Sheriff; the production-code ban is Biome's override on packages/cli).
