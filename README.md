@@ -9,7 +9,11 @@ nothing else, so you can replace it with your own domain immediately.
 
 - **Hexagonal layering**, enforced three ways:
   - the package graph (`@app/core` pure ← `@app/cli` adapter),
-  - **Sheriff** (`sheriff.config.ts`) on the module graph,
+  - **Sheriff** (`sheriff.config.ts`) on the module graph — layers AND
+    emergent feature modules: dormant placeholder rules tag any
+    `core/src/<feature>/…` folder the moment it exists, features are isolated
+    by default (`sameTag` + `shared`), and a feature can never import the
+    nursery (see the anatomy below and ADR-0006),
   - **Biome** `noRestricted*` (override on `packages/core`) for the no-I/O /
     no-ambient-state purity invariant Sheriff can't see,
   - a **fitness function** (`packages/core/src/purity.spec.ts`) for what neither
@@ -109,9 +113,17 @@ grep -rln "EXAMPLE" packages     # the full list, always current
 |--------|---------|
 | `EXAMPLE … DELETE` | dies with the example slice |
 | `EXAMPLE CONTENT, SKELETON ROLE` | keep the file, replace its contents: the composition root (`run.ts`), the error mapping (`report.ts`), the index exports, and the three test altitudes |
-| `KEEP` | generic skeleton that only *looks* example-adjacent (`domain/result.ts`) |
+| `KEEP` | generic skeleton that only *looks* example-adjacent (`shared/result.ts`) |
 
 Everything unmarked (toolchain, hooks, `purity.spec.ts`, `docs/`) is skeleton.
+
+`greet` lives **extracted** (`core/src/greet/{domain,application,testing}`) on
+purpose: it shows the end state of the module lifecycle, while the flat
+`domain/` and `application/` folders are the **nursery** where your own files
+are born. Modules are discovered, not decreed — the signal, the extraction
+procedure and the enforcement are
+[ADR-0006](docs/adr/0006-emergent-feature-modules.md); `pnpm modules:hint`
+points at candidates when the nursery grows.
 
 ### Tearing out the example
 
@@ -125,7 +137,7 @@ The script ([scripts/eject-example.ts](scripts/eject-example.ts)) deletes the
 three test altitudes stay alive, so the strip-only invariant remains locked even
 before your first feature — empties the registry, and removes the two
 dependencies knip would rightly flag (`@app/core` in `cli`, `fast-check`;
-re-add them the moment a feature needs them). `domain/result.ts` and its spec
+re-add them the moment a feature needs them). `shared/result.ts` and its spec
 are kept: coverage is 100 % per file, a kept file keeps its spec.
 
 Doing it by hand instead? The blind run costs four failed gate passes — follow
@@ -152,10 +164,12 @@ Then: `/new-feature-hexa`, outside-in.
 ## Layout
 
 ```
-packages/core/src/domain        pure model
-packages/core/src/application   use-cases + ports (the registry README lives here)
-packages/core/src/testing       port contracts + in-memory fakes (@app/core/testing)
-packages/core/src/index.ts      the only public surface adapters import
+packages/core/src/domain        NURSERY: new domain files are born here, flat
+packages/core/src/application   NURSERY: use-cases + ports (+ the registry README)
+packages/core/src/shared        the kernel — grows by promotion only (Result lives here)
+packages/core/src/greet         an EXTRACTED feature module: {domain,application,testing}
+packages/core/src/testing       the @app/core/testing barrel (re-exports feature test kits)
+packages/core/src/index.ts      the only public surface adapters import (fitness-checked)
 packages/cli/src/adapters       port implementations (I/O lives here)
 packages/cli/src/run.ts         composition root (testable in process)
 packages/cli/src/main.ts        entrypoint — the process boundary, nothing else
