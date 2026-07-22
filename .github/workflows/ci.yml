@@ -23,7 +23,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -44,7 +44,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -61,7 +61,7 @@ jobs:
         with:
           fetch-depth: 0
       - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -82,7 +82,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
@@ -91,7 +91,7 @@ jobs:
       # `incremental: true` in stryker.config.json only pays off if the state
       # file survives the run — otherwise every CI run mutates everything.
       - name: Restore Stryker incremental state
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: reports/stryker-incremental.json
           key: stryker-${{ github.sha }}
@@ -103,7 +103,7 @@ jobs:
       # mutants survived and where.
       - name: Upload the mutation report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mutation-report
           path: reports/mutation
@@ -116,7 +116,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version-file: .nvmrc
           cache: pnpm
