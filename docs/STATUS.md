@@ -6,43 +6,35 @@
 
 ## Where we are
 
-- **Phase**: starter hardened. A 7-PR stack is open, reviewed and green locally,
-  waiting to be merged into `main`.
-- **Branch**: `fix/dx-hardening` (tip of the stack, 8 PRs).
-- **Packages**: `@app/core` (pure hexagon, plus `@app/core/testing` for the port
-  contracts and fakes) and `@app/cli` (adapters). Add `packages/web` as needed.
-- **Health**: 109 tests, 100 % coverage, 100 % mutation score (62 mutants).
-  **CI has verified none of it** — GitHub Actions is blocked on account billing
-  since 2026-07-17, which predates this work.
+- **Phase**: hardening milestone merged to `main` (runnable bin, contracts,
+  `Clock`, typed errors, bounded docs, ejectable example, two-tier CI —
+  Windows leg green after the `.gitattributes` fix). Emergent feature modules
+  ([ADR-0006](adr/0006-emergent-feature-modules.md), accepted) implemented on
+  `feat/emergent-modules`, PR about to open.
+- **Branch**: `feat/emergent-modules`.
+- **Core anatomy**: nurseries (`domain/`, `application/`) → extracted feature
+  modules (`greet/` is the worked example) + `shared/` kernel; Sheriff
+  placeholder rules proven 6/6 by injected violations; public surface
+  fitness-checked (`public-surface.spec.ts`).
+- **Health**: 114 tests, 100 % coverage, 100 % mutation (62 mutants),
+  post-eject gate green in one pass (35 tests).
 
 ## Next action
 
-Settle the three open decisions of
-[ADR-0006](adr/0006-emergent-feature-modules.md) (emergent feature modules:
-greet placement, sequencing, `modules:hint`), then implement them as PR9.
-In parallel: unblock Actions billing, merge the stack **#10 → … → #17** in
-order, then Dependabot #9 (`ci.yml` conflict expected) and #8.
+Open the PR for `feat/emergent-modules`; merge on green CI. Then apply the
+branch-protection command from the README, and handle Dependabot: close #9
+(conflicts with the rewritten `ci.yml`, let it regenerate), merge #8.
 
 ## Current milestone
 
 | Step | Description | Status |
 |------|-------------|--------|
-| 0 | Starter bootstrapped (monorepo, toolchain, guardrails, example slice) | ✅ |
-| 1 | Hardening: runnable bin, contracts, `Clock`, typed errors, bounded docs, DX (ejectable example, fakes ban, safe pre-commit) | 🔄 stack open |
-| 2 | _your first real feature_ | ⬜ |
+| 1 | Hardening (bin, contracts, Clock, typed errors, bounded docs, DX, CI tiers) | ✅ merged |
+| 2 | Emergent feature modules (ADR-0006) + public-surface fitness | 🔄 PR opening |
+| 3 | _your first real feature_ / loupe migration using this mechanism | ⬜ |
 
 ## Open questions
 
-- **Windows**: the first-ever CI run caught a real bug (no `.gitattributes` →
-  CRLF checkouts fail Biome on every line). Fixed, and confirmed green by a
-  workflow_dispatch of the deep tier on the branch. The Windows gate now lives
-  in the deep tier (post-merge + on-demand).
 - **Is a build step wanted eventually?** Deferred in
   [ADR-0001](adr/0001-strip-only-typescript-no-build-step.md) — revisit if this
   ever ships to npm.
-- **Module boundaries**: strategy proposed in
-  [ADR-0006](adr/0006-emergent-feature-modules.md), three decisions open before
-  PR9 (example placement, sequencing, discovery aid).
-- **Public-surface fitness function**: assert every `core/src/index.ts` export
-  has a consumer outside the core (closes the documented knip blind spot).
-  Doctrine written; the spec itself is code — pair it with PR9.
