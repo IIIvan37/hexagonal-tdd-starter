@@ -42,9 +42,14 @@ yields the value, never a global read from inside the hexagon.
 
 Every port owns a **contract** — the obligations an adapter must honour, written
 once and replayed against each implementation, so adapters stay substitutable.
-Lives in [../testing/port-contracts.ts](../testing/port-contracts.ts), validated
-against the in-memory reference implementations in
-[../testing/in-memory-adapters.ts](../testing/in-memory-adapters.ts).
+Contracts and their in-memory reference implementations live in the owning
+feature's `testing/` folder
+([../greet/testing/port-contracts.ts](../greet/testing/port-contracts.ts) and
+[../greet/testing/in-memory-adapters.ts](../greet/testing/in-memory-adapters.ts)
+for the example; still-in-nursery ports put theirs directly in
+[../testing/](../testing/)), all re-exported by the
+[../testing/index.ts](../testing/index.ts) barrel so adapters keep one import
+path: `@app/core/testing`.
 
 Adding a port? Add its contract and its in-memory fake in the same step, and list
 them above. Adding an adapter? Call the contract with a factory — never rewrite

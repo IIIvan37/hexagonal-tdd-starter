@@ -64,7 +64,7 @@ not.
 2. **Outside-in.** The domain is a supplier, pulled into existence by a consumer
    need (a use-case / acceptance test) — never written speculatively.
 3. **Expected failures are values; bugs crash.** The domain returns
-   `Result<T, E>` (`domain/result.ts`), never throws for a business rule. Errors
+   `Result<T, E>` (`shared/result.ts`), never throws for a business rule. Errors
    are **tags** (`{ kind: 'empty-name' }`), never sentences — the adapter owns
    the wording, the language and the exit code (`cli/src/report.ts`, exhaustive
    via `exhausted(error: never)`). `try/catch` wraps a **single port call**, never

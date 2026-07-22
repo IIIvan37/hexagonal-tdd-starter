@@ -43,22 +43,19 @@ Node comes from [`.nvmrc`](.nvmrc); pnpm from Corepack.
 
 ## Non-negotiables
 
-These are the invariants the tooling defends. If one blocks you, the answer is
-never to widen the rule — see [CLAUDE.md](CLAUDE.md) for the reasoning.
+The invariants the tooling defends — **stated once, in
+[CLAUDE.md](CLAUDE.md)**, which is their canonical wording (this file used to
+paraphrase them, and the paraphrase is what drifted). By name:
 
-- **The core is pure.** No I/O, no browser globals, no `node:*`. And no ambient
-  state: `Date.now()`, `Math.random()`, timers and `process.env` are banned
-  inside the hexagon — inject a port that yields the value (`Clock` is the
-  worked example).
-- **Ports are contract-tested.** Obligations live once in
-  `packages/core/src/testing/port-contracts.ts` and are replayed by each adapter
-  spec. Never restate them; never hand-roll a fake that `@app/core/testing`
-  already provides.
-- **Expected failures are values; bugs crash.** The domain returns
-  `Result<T, E>` with error **tags**, never sentences. `try/catch` wraps one port
-  call, never a use-case body.
-- **Strip-only TypeScript.** The bin runs the `.ts` sources through Node's type
-  stripping: no parameter properties, `enum`, `namespace` or decorators.
+1. a **pure, deterministic core** (ambient state goes behind a port),
+2. **outside-in** (no speculative domain code),
+3. **expected failures are values, bugs crash** (tagged `Result`, exhaustive
+   adapter mapping),
+4. **parse, don't validate** — plus **contract-tested ports** and **strip-only
+   TypeScript** (see Conventions there).
+
+If one of them blocks you, the answer is never to widen the rule — read the
+matching [docs/adr/](docs/adr/) entry for why it exists.
 
 ## Commits
 

@@ -23,21 +23,19 @@ interface ForbiddenPattern {
   readonly why: string
 }
 
+// A REFERENCE is enough to be impure (`const f = Date.now` smuggles the same
+// ambient state as the call), so no pattern below requires the `(`.
 const FORBIDDEN: readonly ForbiddenPattern[] = [
   {
-    pattern: /\bMath\s*\.\s*random\s*\(/,
+    pattern: /\bMath\s*\.\s*random\b/,
     why: 'ambient randomness — inject a port that yields the value'
   },
   {
-    pattern: /\bDate\s*\.\s*now\s*\(/,
+    pattern: /\b(?:Date|performance)\s*\.\s*now\b/,
     why: 'ambient time — inject the `Clock` port'
   },
   {
-    pattern: /\bperformance\s*\.\s*now\s*\(/,
-    why: 'ambient time — inject the `Clock` port'
-  },
-  {
-    pattern: /\bcrypto\s*\.\s*(randomUUID|getRandomValues)\s*\(/,
+    pattern: /\bcrypto\s*\.\s*(randomUUID|getRandomValues)\b/,
     why: 'ambient randomness — inject a port that yields the value'
   },
   {
@@ -45,8 +43,15 @@ const FORBIDDEN: readonly ForbiddenPattern[] = [
     why: 'ambient configuration — pass it in as a value'
   },
   {
-    pattern: /\bglobalThis\s*\./,
+    pattern: /\bglobalThis\s*[.[]/,
     why: 'ambient state — the core takes its dependencies as arguments'
+  },
+  {
+    // `Math["random"]` reaches the same ambient state while hiding the member
+    // name from the patterns above — so computed access on an ambient global
+    // is banned as a form: use dot access, which the detector can read.
+    pattern: /\b(?:Math|Date|crypto|performance|process)\s*\[/,
+    why: 'computed access on an ambient global — use dot access so this detector can see what you reach for'
   },
   {
     pattern: /\brequire\s*\(/,
@@ -89,6 +94,33 @@ function findImpurities(source: string): readonly Impurity[] {
     )
 }
 
+/** Module specifiers a source reaches for: static, dynamic, side-effect, re-export. */
+function specifiersOf(source: string): readonly string[] {
+  const code = withoutComments(source)
+  return [
+    ...code.matchAll(/\bfrom\s+['"]([^'"]+)['"]/g),
+    ...code.matchAll(/\bimport\s*\(\s*['"]([^'"]+)['"]/g),
+    ...code.matchAll(/\bimport\s+['"]([^'"]+)['"]/g)
+  ].map((m) => m[1] ?? '')
+}
+
+/**
+ * The hexagon imports nothing but itself: every specifier in a core production
+ * file must be relative. This is the non-enumerative closure of Biome's
+ * `noRestrictedImports` list — an enumeration of `node:` modules ages with
+ * every Node release (`node:sqlite`, `node:zlib`, … were never on it), and a
+ * bare legacy name (`fs`) or a stray npm package is the same hole. One
+ * documented seam: the port contracts in a `testing/` folder run on vitest.
+ */
+function foreignSpecifiersIn(source: string, path: string): readonly string[] {
+  return specifiersOf(source).filter((spec) => {
+    if (spec.startsWith('./') || spec.startsWith('../')) {
+      return false
+    }
+    return !(spec === 'vitest' && path.includes('/testing/'))
+  })
+}
+
 /** Every non-spec `.ts` file under the core, recursively. */
 function coreSources(dir: string): readonly string[] {
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -115,7 +147,14 @@ describe('the detector itself', () => {
     ['const id = crypto.randomUUID()', 'randomness'],
     ['const home = process.env.HOME', 'configuration'],
     ['globalThis.cache = {}', 'state'],
-    ['const fs = require("node:fs")', 'module loading']
+    ['const fs = require("node:fs")', 'module loading'],
+    // Evasions of the dot-access patterns: computed access on an ambient
+    // global, and grabbing the function without calling it.
+    ['const n = Math["random"]()', 'computed access'],
+    ["const id = crypto['randomUUID']()", 'computed access'],
+    ['globalThis["cache"] = {}', 'state'],
+    ['const now = Date.now', 'reference without a call'],
+    ['const rand = Math.random', 'reference without a call']
   ])('flags %j', (source) => {
     expect(findImpurities(source)).toHaveLength(1)
   })
@@ -149,6 +188,50 @@ describe('the detector itself', () => {
   })
 })
 
+describe('the foreign-import detector itself', () => {
+  const anyCorePath = 'packages/core/src/greet/domain/greeting.ts'
+
+  it.each([
+    [
+      "import { gzipSync } from 'node:zlib'",
+      'a node: builtin Biome does not enumerate'
+    ],
+    ['import { DatabaseSync } from "node:sqlite"', 'double quotes'],
+    ["const z = await import('node:zlib')", 'a dynamic import'],
+    ["import { readFileSync } from 'fs'", 'a bare legacy builtin'],
+    ["import Big from 'big.js'", 'an npm package'],
+    ["import 'reflect-metadata'", 'a side-effect import'],
+    ["export { x } from 'node:util'", 'a re-export']
+  ])('flags %j (%s)', (source) => {
+    expect(foreignSpecifiersIn(source, anyCorePath)).toHaveLength(1)
+  })
+
+  it.each([
+    "import { greet } from './greet.ts'",
+    "export type { Result } from '../shared/result.ts'",
+    "const lazy = await import('./heavy.ts')"
+  ])('leaves %j alone', (source) => {
+    expect(foreignSpecifiersIn(source, anyCorePath)).toEqual([])
+  })
+
+  it('allows vitest inside a testing/ folder only', () => {
+    const source = "import { describe, expect, it } from 'vitest'"
+    expect(
+      foreignSpecifiersIn(
+        source,
+        'packages/core/src/greet/testing/port-contracts.ts'
+      )
+    ).toEqual([])
+    expect(foreignSpecifiersIn(source, anyCorePath)).toEqual(['vitest'])
+  })
+
+  it('ignores a specifier that only appears in prose', () => {
+    expect(
+      foreignSpecifiersIn("// don't import from 'node:fs' here", anyCorePath)
+    ).toEqual([])
+  })
+})
+
 describe('the core stays free of ambient state', () => {
   const sources = coreSources(coreRoot)
 
@@ -162,5 +245,16 @@ describe('the core stays free of ambient state', () => {
       .map(({ line, why, text }) => `  line ${line}: ${text}\n    → ${why}`)
       .join('\n')
     expect(impurities, `\n${path}\n${report}`).toEqual([])
+  })
+
+  it.each(sources)('%s imports nothing but the core itself', (path) => {
+    const foreign = foreignSpecifiersIn(readFileSync(path, 'utf8'), path)
+    expect(
+      foreign,
+      `\n${path} imports foreign modules: ${foreign.join(', ')}.` +
+        '\nThe hexagon has zero production dependencies — I/O and ambient' +
+        '\nstate live in an adapter behind a port. (vitest is allowed in' +
+        '\na testing/ folder only.)'
+    ).toEqual([])
   })
 })
