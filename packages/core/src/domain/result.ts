@@ -1,3 +1,4 @@
+// KEEP — generic skeleton, not part of the greet example. Every slice reuses this.
 /**
  * The domain's way of saying "this can fail, and here is how".
  *

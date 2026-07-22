@@ -1,3 +1,4 @@
+// EXAMPLE (greet slice) — DELETE with your first real feature. Removal guide: README "Anatomy".
 import type { Greeting } from '../domain/greeting.ts'
 import type { Instant } from '../domain/instant.ts'
 

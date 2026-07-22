@@ -1,3 +1,4 @@
+// EXAMPLE (greet slice) — DELETE with your first real feature. Removal guide: README "Anatomy".
 import { describe, expect, it } from 'vitest'
 import type { Clock, GreetingSink, NameSource } from '../application/ports.ts'
 import type { Greeting } from '../domain/greeting.ts'
@@ -87,11 +88,16 @@ export function clockContract(
       expect(offsetMinutes).toBeLessThanOrEqual(MAX_OFFSET_MINUTES)
     })
 
-    it('never runs backwards between two reads', () => {
+    it('never leaps backwards between two reads', () => {
       const { clock } = createSubject()
       const first = clock.now().epochMs
       const second = clock.now().epochMs
-      expect(second).toBeGreaterThanOrEqual(first)
+      // Tolerance on purpose: `Instant` is WALL-CLOCK time, and a wall clock may
+      // step back slightly (NTP adjustment) between two reads. A strict
+      // `second >= first` would make this contract flaky on real hosts — the
+      // worst place for a flake, since every adapter replays it. Monotonicity
+      // is not something this port promises; only the absence of a wild leap.
+      expect(second).toBeGreaterThanOrEqual(first - 1000)
     })
 
     it('yields an instant the domain can read as a wall-clock hour', () => {
@@ -111,23 +117,26 @@ export function greetingSinkContract(
   label: string,
   createSubject: () => GreetingSinkSubject
 ): void {
+  // A realistic fixture (same shape the domain emits), built directly on
+  // purpose: the sink contract is about DELIVERY, not about how a valid
+  // greeting is constructed — that is `buildGreeting`'s spec's job.
   const greetingOf = (recipient: string): Greeting => ({
     recipient,
-    message: `Hello, ${recipient}!`
+    message: `Good morning, ${recipient}!`
   })
 
   describe(`${label} — GreetingSink contract`, () => {
     it('delivers the message of the greeting it is given', async () => {
       const { sink, emitted } = createSubject()
       await sink.save(greetingOf('Ada'))
-      expect(emitted()).toEqual(['Hello, Ada!'])
+      expect(emitted()).toEqual(['Good morning, Ada!'])
     })
 
     it('delivers every greeting, in the order they were saved', async () => {
       const { sink, emitted } = createSubject()
       await sink.save(greetingOf('Ada'))
       await sink.save(greetingOf('Grace'))
-      expect(emitted()).toEqual(['Hello, Ada!', 'Hello, Grace!'])
+      expect(emitted()).toEqual(['Good morning, Ada!', 'Good morning, Grace!'])
     })
 
     it('leaves the greeting it was given untouched', async () => {

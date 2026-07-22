@@ -1,3 +1,4 @@
+// EXAMPLE (greet slice) — DELETE with your first real feature. Removal guide: README "Anatomy".
 import fc from 'fast-check'
 import { describe, expect, it } from 'vitest'
 import { buildGreeting } from './greeting.ts'

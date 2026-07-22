@@ -1,3 +1,4 @@
+// EXAMPLE CONTENT, SKELETON ROLE — keep this file, rewrite its contents for your slice. See README "Anatomy".
 import { greet } from '@app/core'
 import { ArgvNameSource } from './adapters/argv-name-source.ts'
 import { ConsoleGreetingSink } from './adapters/console-greeting-sink.ts'

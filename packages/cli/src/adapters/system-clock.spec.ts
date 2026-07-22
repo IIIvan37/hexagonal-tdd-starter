@@ -1,3 +1,4 @@
+// EXAMPLE (greet slice) — DELETE with your first real feature. Removal guide: README "Anatomy".
 import { clockContract } from '@app/core/testing'
 import { describe, expect, it } from 'vitest'
 import { SystemClock } from './system-clock.ts'

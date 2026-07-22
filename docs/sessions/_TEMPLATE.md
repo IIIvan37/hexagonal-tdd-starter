@@ -7,7 +7,12 @@
 -
 
 ## Decisions
-- <durable decision; link to an invariant or a resolved open question if relevant>
+<!--
+One line per decision. If it touched a boundary, an invariant or the toolchain,
+write the reasoning ONCE in an ADR and LINK it here — do not restate it. This
+section is a log; docs/adr/ is the explanation.
+-->
+- <decision — [ADR-NNNN](../adr/NNNN-….md) if there is one>
 
 ## Gate status
 - typecheck:

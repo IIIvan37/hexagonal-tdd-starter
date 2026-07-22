@@ -1,3 +1,4 @@
+// EXAMPLE (greet slice) — DELETE with your first real feature. Removal guide: README "Anatomy".
 import { describe, expect, it } from 'vitest'
 import { EXIT_MISUSE, EXIT_UNAVAILABLE, report } from './report.ts'
 

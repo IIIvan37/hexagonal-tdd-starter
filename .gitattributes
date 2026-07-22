@@ -1,0 +1,5 @@
+# One line-ending policy for every platform. Without this, a Windows clone
+# (git core.autocrlf=true, the default there) materializes CRLF files and the
+# gate fails on every line — Biome enforces LF. Caught by the Windows CI leg
+# on its very first run.
+* text=auto eol=lf

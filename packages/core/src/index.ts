@@ -1,3 +1,4 @@
+// EXAMPLE CONTENT, SKELETON ROLE — keep this file, rewrite its contents for your slice. See README "Anatomy".
 // Public contract of the core (the only surface adapters consume).
 
 export type {

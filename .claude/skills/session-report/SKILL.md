@@ -34,21 +34,45 @@ Then run the quality gate and record the result:
   (with the results from step 1), State to resume from.
 - "State to resume from" must name the SINGLE next action and any gotchas /
   half-done edits.
+- **Decisions is a log, not an explanation.** If the step changed a boundary, an
+  invariant or the toolchain, write the reasoning once as an ADR in
+  [docs/adr/](../../../docs/adr/) (copy `_TEMPLATE.md`, add it to the index) and
+  link it from this section. Never restate the why in both places — a report is
+  read to resume, an ADR is read months later by someone about to undo the
+  constraint. Most steps need no ADR.
 
-## 3. Update the canonical STATUS
+## 3. Roll the window
 
-Edit `docs/STATUS.md`:
-- Update the roadmap / progress: what's done, in-progress, next.
-- Update "Where we are" (branch, current step, next step).
-- Record any open decision that got **resolved** this session.
+`docs/sessions/` keeps the **5 most recent** reports. If adding yours makes six,
+`git mv` the oldest into `docs/sessions/archive/`. Nothing is deleted — the
+working set just stays scannable.
 
-## 4. Keep memory in sync (optional, if the plan shifted)
+## 4. Rewrite the canonical STATUS
+
+`docs/STATUS.md` is a **snapshot of the present, not a log** — bounded at 60
+non-blank lines by `docs/docs.spec.ts`, which fails the gate if it drifts.
+Rewrite it, don't append:
+
+- **Where we are** — branch, phase, packages. Replace the old text.
+- **Next action** — the SINGLE next thing. Replace it.
+- **Current milestone** — the milestone in flight and the next one only. Collapse
+  a finished milestone to one line; the detail is in `git log` and the reports.
+- **Open questions** — only what is genuinely undecided. **Delete** each one when
+  it is resolved: a resolved question is either an [ADR](../../../docs/adr/) or
+  nothing.
+
+Never add a session index to STATUS — `ls docs/sessions/` already is one, and
+that section is exactly what turned STATUS into a 300-line log on a real project.
+If the fitness function fails, the fix is to move content out (history →
+sessions, why → ADR), never to raise the bound.
+
+## 5. Keep memory in sync (optional, if the plan shifted)
 
 If a durable cross-session decision changed (an invariant, a resolved open
 question, a scope change), capture it. Don't duplicate the whole report — just the
 durable decision.
 
-## 5. Commit the report on the feature branch — BEFORE the PR
+## 6. Commit the report on the feature branch — BEFORE the PR
 
 The report + STATUS update describe the work the PR contains, so they ship
 **inside** the PR — never as a separate post-merge commit on `main`.

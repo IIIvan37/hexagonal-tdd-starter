@@ -33,12 +33,14 @@ export const config: SheriffConfig = {
     'core:application': ['core:domain'],
     // The public contract (index.ts) re-exports domain + application.
     'core:api': ['core:domain', 'core:application'],
-    // Test support (fakes + port contracts): sees the layers it doubles, and is
-    // itself invisible to production code — nothing but an adapter's *specs*
-    // depends on it, which is why no rule grants `core:api` access to it.
+    // Test support (fakes + port contracts): sees the layers it doubles. No core
+    // production tag may reach it (that is the rule Sheriff enforces here).
     'core:testing': ['core:domain', 'core:application'],
     // Adapters consume the core's public contract, plus the test support their
-    // specs replay the port contracts from.
+    // specs replay the port contracts from. CAVEAT: the `cli` tag covers the
+    // whole package, so Sheriff alone would let PRODUCTION adapter code import
+    // the fakes — the spec-only restriction is enforced by Biome
+    // (noRestrictedImports override on packages/cli, spec files exempted).
     cli: ['core:api', 'core:testing']
   }
 }

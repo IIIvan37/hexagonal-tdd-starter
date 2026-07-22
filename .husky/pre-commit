@@ -15,19 +15,47 @@ fi
 # Staged files (added/copied/modified/renamed — deletions need no formatting).
 staged=$(git diff --cached --name-only --diff-filter=ACMR)
 
-# Doc-only fast path: a commit touching only *.md / docs/** skips the gate.
-# commitlint still runs via the commit-msg hook; CI re-runs the full gate.
+# Doc-only fast path: a commit touching only *.md / docs/** skips the code gate
+# — but NOT the docs fitness function (docs/docs.spec.ts): the STATUS/session
+# bounds exist precisely to catch doc commits, so exempting doc commits from
+# them would hollow out the guard. commitlint still runs via the commit-msg
+# hook; CI re-runs the full gate.
 if [ -n "$staged" ] && ! printf '%s\n' "$staged" | grep -qvE '\.md$|^docs/'; then
-  echo "📝 doc-only commit — skipping the gate"
+  echo "📝 doc-only commit — running only the docs fitness function"
+  pnpm -s exec vitest run docs/docs.spec.ts
   exit 0
 fi
 
-# Format ONLY the staged files, then re-stage those same paths. Never `git add
-# -u` here: it would sweep unrelated unstaged work into the commit.
+# Format the staged files — but ONLY those with no unstaged edits. Formatting a
+# partially staged file and re-adding it would sweep the unstaged hunks into the
+# commit (`git add <path>` stages the whole working-tree content), silently
+# destroying a careful `git add -p`. Those files are left untouched with a loud
+# warning instead; the repo-wide `biome check` in CI is the backstop. (This is
+# consistent with the rest of the hook: typecheck & tests read the working tree,
+# not the index, so pre-commit was never a faithful index check.)
 if [ -n "$staged" ]; then
-  echo "🔍 biome --write (staged files only)"
-  printf '%s\n' "$staged" | xargs pnpm -s exec biome check --write --no-errors-on-unmatched
-  printf '%s\n' "$staged" | xargs git add --
+  unstaged=$(git diff --name-only)
+  fully_staged=""
+  partially_staged=""
+  for f in $staged; do
+    if printf '%s\n' "$unstaged" | grep -qxF "$f"; then
+      partially_staged="$partially_staged $f"
+    else
+      fully_staged="$fully_staged $f"
+    fi
+  done
+
+  if [ -n "$fully_staged" ]; then
+    echo "🔍 biome --write (fully staged files)"
+    printf '%s\n' $fully_staged | xargs pnpm -s exec biome check --write --no-errors-on-unmatched
+    printf '%s\n' $fully_staged | xargs git add --
+  fi
+
+  if [ -n "$partially_staged" ]; then
+    echo "⚠️  partially staged (unstaged edits too) — NOT auto-formatted, to protect"
+    echo "   your staged hunks. CI's repo-wide biome check is the backstop:"
+    for f in $partially_staged; do echo "   - $f"; done
+  fi
 fi
 
 # Blocking guardrails (greenfield: no debt, so no tolerance). Same composition

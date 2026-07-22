@@ -20,7 +20,7 @@ domain.
   CI post-merge. Kept out of `gate` (too slow per commit).
 - `pnpm typecheck` / `pnpm check` / `pnpm check:fix` / `pnpm check:arch`
   / `pnpm check:dead` / `pnpm check:dup`.
-- Run the example: `pnpm --filter @app/cli start <name>`.
+- Run the example: `pnpm greet <name>`.
 
 ## Architecture (hexagonal)
 
@@ -75,8 +75,13 @@ not.
 - **New feature** = a hexagonal vertical slice (`/new-feature-hexa`): pure domain +
   use-case/port in `core`, adapter in `cli`; register it in
   [packages/core/src/application/README.md](packages/core/src/application/README.md).
-- **Close every step** with `/session-report` (updates `docs/STATUS.md` + a dated
+- **Close every step** with `/session-report` (rewrites `docs/STATUS.md` + a dated
   report under `docs/sessions/`). The report ships **inside** the feature's PR.
+- **Project state is bounded** (`docs/docs.spec.ts`, in the gate). `STATUS.md` is
+  a snapshot of the present (≤ 60 lines), never a log; `docs/sessions/` is a
+  rolling window of 5, older reports `git mv`'d to `sessions/archive/`; durable
+  decisions go to `docs/adr/`, indexed by subject. If a bound fails, move content
+  out — never raise the bound.
 
 ## Conventions
 

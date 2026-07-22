@@ -1,3 +1,4 @@
+// EXAMPLE (greet slice) — DELETE with your first real feature. Removal guide: README "Anatomy".
 import { greetingSinkContract } from '@app/core/testing'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { ConsoleGreetingSink } from './console-greeting-sink.ts'

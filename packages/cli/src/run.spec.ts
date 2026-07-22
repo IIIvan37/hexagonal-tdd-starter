@@ -1,3 +1,4 @@
+// EXAMPLE CONTENT, SKELETON ROLE — keep this file, rewrite its contents for your slice. See README "Anatomy".
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { run } from './run.ts'
 
