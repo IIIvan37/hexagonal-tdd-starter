@@ -11,8 +11,8 @@ import { EXIT_MISUSE, EXIT_OK, report } from './report.ts'
  * in `report.ts`.
  *
  * Kept separate from `main.ts` so the whole slice stays testable in process —
- * `main.ts` owns only the process boundary (`process.exit`), which a test cannot
- * cross. Return the exit code, never call `process.exit` from here.
+ * `main.ts` owns only the process boundary (`process.exitCode`), which a test
+ * cannot cross. Return the exit code, never call `process.exit` from here.
  */
 export async function run(argv: readonly string[]): Promise<number> {
   const name = argv[0]
