@@ -29,7 +29,7 @@
     "modules:hint": "node scripts/modules-hint.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.2.4",
+    "@biomejs/biome": "^2.5.5",
     "@commitlint/cli": "^21.1.0",
     "@commitlint/config-conventional": "^21.1.0",
     "@softarc/sheriff-core": "^0.19.6",
