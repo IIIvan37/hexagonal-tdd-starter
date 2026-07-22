@@ -12,6 +12,9 @@
   now verifies the testing subtree (second entry point), purity and
   public-surface fitness functions reject their evasion forms, and living docs
   are fitness-checked for path existence (first run caught six broken refs).
+  A second review folded in: `main.ts` sets `exitCode` (no mid-flush exit),
+  the core may only import itself (non-enumerative `node:` closure), and
+  adapter specs no longer count as public-surface consumers.
 - **Branch**: `chore/doc-truth-and-detector-hardening`.
 - **Core anatomy**: nurseries (`domain/`, `application/`, currently empty) →
   extracted feature modules (`greet/` is the worked example) + `shared/`

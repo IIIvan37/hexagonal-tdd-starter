@@ -25,6 +25,23 @@
   CONTRIBUTING's non-negotiables now defer to CLAUDE.md instead of
   paraphrasing it.
 
+### Folded in from a second review (same step)
+
+- **`main.ts` sets `process.exitCode`** instead of calling `process.exit()`:
+  exit() can tear the process down before stdout/stderr drain to a pipe. The
+  reviewer's "gate red, three binary tests fail" did NOT reproduce here (0
+  losses in a 100-run stress, gate green all day) — but the race is real,
+  Windows CI is more exposed, and the fix is free. Eject keeps `main.ts`, so
+  the post-eject skeleton inherits it.
+- **The hexagon imports nothing but itself** (`purity.spec.ts`): every
+  specifier in a core production file must be relative — the non-enumerative
+  closure of Biome's `node:` list, which ages with Node (`node:sqlite`,
+  `node:zlib`, bare `fs`, npm strays). One documented seam: `vitest` inside a
+  `testing/` folder.
+- **Adapter specs cannot justify a public export**
+  (`public-surface.spec.ts`): the consumer walk now excludes `*.spec.ts`, so
+  "consumed" means a production consumer, as the invariant always claimed.
+
 ## Not done / remaining
 - The honest-review follow-ups not in this step's scope: an explicit audience
   statement in the README, and a second adapter package to prove port
@@ -43,7 +60,7 @@
 
 ## Gate status
 - typecheck: green
-- tests (with coverage): green — 152 tests, 100 % coverage (123/123 stmts)
+- tests (with coverage): green — 175 tests, 100 % coverage (123/123 stmts)
 - mutation (Stryker, local): green — 100.00 score (core production code
   untouched this step; incremental run)
 - biome / sheriff / knip / jscpd: green (sheriff now verifies two entry
