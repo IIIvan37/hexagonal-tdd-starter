@@ -134,7 +134,19 @@ function pathCandidatesOf(markdown: string): readonly string[] {
   return [...spans, ...links].filter(isCheckablePath)
 }
 
-/** Every repo path (files and directories), relative to the root. */
+/** Ancestor directories of a file list, in posix form (any separator in). */
+function ancestorDirsOf(files: readonly string[]): readonly string[] {
+  return [
+    ...new Set(
+      files.flatMap((file) => {
+        const parts = file.split(/[\\/]/).slice(0, -1)
+        return parts.map((_, i) => parts.slice(0, i + 1).join('/'))
+      })
+    )
+  ]
+}
+
+/** Every repo path (files and directories), relative to the root, in posix form. */
 function repoPaths(): readonly string[] {
   const skip = new Set(['node_modules', '.git', 'reports', 'coverage'])
   const files: string[] = []
@@ -146,16 +158,12 @@ function repoPaths(): readonly string[] {
           walkDir(path)
         }
       } else {
-        files.push(relative(ROOT, path))
+        files.push(relative(ROOT, path).replaceAll('\\', '/'))
       }
     }
   }
   walkDir(ROOT)
-  const dirs = files.flatMap((file) => {
-    const parts = file.split('/').slice(0, -1)
-    return parts.map((_, i) => parts.slice(0, i + 1).join('/'))
-  })
-  return [...new Set([...files, ...dirs])]
+  return [...new Set([...files, ...ancestorDirsOf(files)])]
 }
 
 /** True when `candidate` exists — relative to the doc, the root, or as a suffix. */
@@ -168,7 +176,11 @@ function resolvesInRepo(
   if (existsSync(resolve(docDir, clean)) || existsSync(resolve(ROOT, clean))) {
     return true
   }
-  return paths.some((p) => p === clean || p.endsWith(`/${clean}`))
+  // The Windows CI leg walks backslash paths; doc mentions use slashes.
+  return paths.some((p) => {
+    const posix = p.replaceAll('\\', '/')
+    return posix === clean || posix.endsWith(`/${clean}`)
+  })
 }
 
 /** The living docs: everything that claims to describe the present. */
@@ -241,6 +253,28 @@ describe('the path detector itself', () => {
       )
     ).toBe(true)
     expect(resolvesInRepo('no-such/no-file.ts', ROOT, paths)).toBe(false)
+  })
+
+  it('matches suffixes across Windows separators too', () => {
+    // On the Windows CI leg, repoPaths() yields backslash-separated paths;
+    // doc mentions always use forward slashes. Its first run proved the
+    // comparison must bridge the two.
+    expect(
+      resolvesInRepo('cli/src/report.ts', ROOT, [
+        'packages\\cli\\src\\report.ts'
+      ])
+    ).toBe(true)
+  })
+
+  it('derives ancestor directories across Windows separators too', () => {
+    // Second Windows lesson: directories are derived from the file list by
+    // splitting on the separator — split on '/' alone and the Windows leg
+    // has no directories at all, so every `dir/` mention reads as broken.
+    expect(ancestorDirsOf(['docs\\sessions\\archive\\README.md'])).toEqual([
+      'docs',
+      'docs/sessions',
+      'docs/sessions/archive'
+    ])
   })
 })
 
