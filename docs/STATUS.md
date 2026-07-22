@@ -34,8 +34,9 @@ order, then Dependabot #9 (`ci.yml` conflict expected) and #8.
 ## Open questions
 
 - **Windows**: the first-ever CI run caught a real bug (no `.gitattributes` →
-  CRLF checkouts fail Biome on every line). Fixed; the Windows gate now lives
-  in the deep tier (post-merge + on-demand) — dispatch pending to confirm green.
+  CRLF checkouts fail Biome on every line). Fixed, and confirmed green by a
+  workflow_dispatch of the deep tier on the branch. The Windows gate now lives
+  in the deep tier (post-merge + on-demand).
 - **Is a build step wanted eventually?** Deferred in
   [ADR-0001](adr/0001-strip-only-typescript-no-build-step.md) — revisit if this
   ever ships to npm.
