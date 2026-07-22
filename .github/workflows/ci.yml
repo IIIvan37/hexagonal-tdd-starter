@@ -4,6 +4,9 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Manual trigger for the deep tier (Windows gate, mutation) on any ref —
+  # e.g. to verify a portability fix on a branch before merging.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -14,16 +17,30 @@ concurrency:
 
 jobs:
   gate:
-    name: Quality gate (${{ matrix.os }})
-    # Windows is in the matrix on purpose: the starter claims to be portable, and
-    # a POSIX-only path assumption in vitest.config.ts once slipped through
-    # precisely because CI never ran anywhere else.
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    name: Quality gate
+    runs-on: ubuntu-latest
     timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm gate
+
+  gate-windows:
+    name: Quality gate (windows)
+    # Deep tier, like mutation: the template must work everywhere, but the
+    # per-PR loop is not where that check earns its keep — Windows runners are
+    # billed at 2× and are slow, and portability regressions are rare. Runs
+    # post-merge on main, and on demand (workflow_dispatch) to verify a
+    # portability fix on a branch. Its first-ever run caught a real bug:
+    # no .gitattributes meant CRLF checkouts, failing Biome on every line.
+    if: github.event_name != 'pull_request'
+    runs-on: windows-latest
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -57,9 +74,9 @@ jobs:
 
   mutation:
     name: Mutation testing (core)
-    # Deep check — runs post-merge on main only, to keep PRs to the fast gate.
-    # (You also run it locally at each close-step, before opening the PR.)
-    if: github.event_name == 'push'
+    # Deep check — post-merge on main and on demand, to keep PRs to the fast
+    # gate. (You also run it locally at each close-step, before opening the PR.)
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     timeout-minutes: 20
     steps:

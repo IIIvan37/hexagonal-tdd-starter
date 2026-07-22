@@ -48,7 +48,10 @@ nothing else, so you can replace it with your own domain immediately.
   binary under plain `node`.
 - **Guardrails**: husky `pre-commit` (gate) + `commit-msg` (commitlint), a
   `block-commit-on-main` hook (code needs a branch+PR; docs may go straight to main).
-- **CI** (GitHub Actions): gate + commitlint on PRs, mutation post-merge; Dependabot.
+- **CI** (GitHub Actions), two tiers: gate + commitlint + dependency audit on
+  PRs; mutation and the **Windows gate** post-merge on `main` or on demand
+  (`workflow_dispatch`) — portability is checked where the promise is made, not
+  on every push. Dependabot for the bumps.
 - **Claude Code skills**: `/tdd-cycle`, `/new-feature-hexa`, `/quality-gate`,
   `/session-report` (the close-step discipline: report ships in the PR, mutation
   run locally pre-PR).
@@ -79,7 +82,7 @@ gh api -X PUT repos/{owner}/{repo}/branches/main/protection --input - <<'EOF'
 {
   "required_status_checks": {
     "strict": true,
-    "contexts": ["Quality gate (ubuntu-latest)", "Commit messages"]
+    "contexts": ["Quality gate", "Commit messages"]
   },
   "required_pull_request_reviews": { "required_approving_review_count": 0 },
   "enforce_admins": true,

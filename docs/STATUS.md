@@ -33,8 +33,9 @@ order, then Dependabot #9 (`ci.yml` conflict expected) and #8.
 
 ## Open questions
 
-- **Does the suite pass on Windows?** #15 adds it to the CI matrix, but that
-  matrix has never run. The path bug it targets was real; the rest is unverified.
+- **Windows**: the first-ever CI run caught a real bug (no `.gitattributes` →
+  CRLF checkouts fail Biome on every line). Fixed; the Windows gate now lives
+  in the deep tier (post-merge + on-demand) — dispatch pending to confirm green.
 - **Is a build step wanted eventually?** Deferred in
   [ADR-0001](adr/0001-strip-only-typescript-no-build-step.md) — revisit if this
   ever ships to npm.
