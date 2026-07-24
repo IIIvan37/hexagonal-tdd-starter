@@ -62,7 +62,7 @@ build/spike that consumer first**. Don't invent the shape.
   (`core/src/<feature>/domain/`) when it plainly belongs to one. Never invent a
   feature folder for a first file: boundaries are discovered, not decreed
   ([ADR-0006](../../../docs/adr/0006-emergent-feature-modules.md)).
-  (+ `<name>.spec.ts`, RED first per `tdd-cycle`: one assertion, fake-it,
+  (+ `<name>.spec.ts`, RED first per `tdd-cycle`: one behavior per test, fake-it,
   triangulate.)
 - Pure functions over your model. No `node:*`, no globals (Biome `noRestricted*` +
   Sheriff enforce it). No config edit is ever needed for a feature folder — the

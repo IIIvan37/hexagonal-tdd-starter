@@ -7,7 +7,7 @@ description: Drive a change through strict red-green-refactor TDD. Use for ANY c
 
 The core is pure (no I/O) by design — there is no excuse to write code before a
 test. One micro-cycle per behavior. Never write production code without a failing
-test that demands it. Two disciplines are non-negotiable: **one assertion per
+test that demands it. Two disciplines are non-negotiable: **one behavior per
 test** and **triangulation** (don't generalize the code until a test forces it).
 
 **Double loop (outside-in).** This unit cycle is the INNER loop. Domain work is
@@ -20,9 +20,12 @@ don't write it.
 ## RED — write one failing test first
 
 - Colocate: `packages/<pkg>/src/<...>/<name>.spec.ts` next to the unit.
-- **One assertion per test.** A test pins exactly ONE behavior and ends in a
-  single `expect`. A second fact = a second test. (Arrange/act may be shared via a
-  helper; the *assertion* is singular.) A property test counts as one assertion:
+- **One behavior per test.** A test pins exactly ONE behavior — one scenario,
+  one observable outcome. Several `expect`s are fine when they describe facets
+  of that SAME outcome (the binary test checks the exit code AND the message of
+  one run: one behavior, one execution — splitting it would rerun the process
+  for nothing). A second *behavior* = a second test; if the test name needs an
+  "and" between two rules, split it. A property test counts as one behavior:
   one invariant per `it`.
 - Name the test by the rule, not the function (`rejects an empty name`). The name
   should read as the single fact being asserted.
