@@ -7,7 +7,7 @@
 
 ## Context
 
-Field report from **loupe**, a real project built on this starter: 55 flat files
+Field report from a real project built on this starter: 55 flat files
 in `core/src/domain`, 11 in `application`, and "the notion of module is lost".
 Measured on its import graph:
 
@@ -33,7 +33,7 @@ and says nothing about slicing the domain itself.
 The obvious fix — feature-first folders from day one — contradicts the
 starter's own invariant #2: on day one the bounded contexts are unknown, and
 naming them up front is speculative design. Nobody would have guessed
-`rhythm/harmony/structure/loops/separation` at loupe's day one; they *emerged*.
+`rhythm/harmony/structure/loops/separation` at that project's day one; they *emerged*.
 
 ## Decision
 
@@ -67,7 +67,7 @@ Discovery is a human act, but prompted at two precise moments:
 ```
 
 plus generic depRules: `sameTag` + `shared` by default; a real inter-feature
-dependency (loupe's `structure → harmony` — a chart genuinely references
+dependency (the field project's `structure → harmony` — a chart genuinely references
 chords) is **one explicit line** in depRules, visible in review.
 
 The extraction procedure — the part that was not understood until spelled out:
@@ -107,12 +107,12 @@ decision (extract or promote) at the same moment.
 - Day zero stays as simple as today; the cost appears exactly when a boundary
   is worth its price, and the mechanical part of that cost is near zero.
 - The gate's violation list becomes the discovery instrument: mislocated
-  knowledge (loupe's two cycles) surfaces the day it costs two minutes, not at
+  knowledge (the field project's two cycles) surfaces the day it costs two minutes, not at
   archaeology time.
 - `ports.ts` stops being able to grow into a god-file: each extraction takes
   its ports away.
 - A use-case touching several features is surfaced explicitly: either evidence
-  the features are one, or a declared composition (loupe's `detect-chords`
+  the features are one, or a declared composition (the field project's `detect-chords`
   spans harmony+rhythm+structure and would be one).
 - The registry README gains a per-module dimension.
 - Cost: one more level of nesting once modules exist; the exception list in
@@ -125,10 +125,10 @@ decision (extract or promote) at the same moment.
   feature — but forces naming bounded contexts before writing code:
   speculative design, the exact thing invariant #2 forbids. Rejected as the
   *default*; it remains the end state extraction converges to.
-- **Status quo + documentation.** Loupe is the proof that what the example
+- **Status quo + documentation.** The field project is the proof that what the example
   does not model does not happen. Rejected.
 - **A clustering tool that proposes modules automatically.** The analysis that
-  produced the loupe evidence is scriptable (`modules:hint`, prefix clusters +
+  produced the field evidence is scriptable (`modules:hint`, prefix clusters +
   import cohesion), but naming a boundary is a domain act — at most a hint,
   never a verdict. Left as an open decision below.
 

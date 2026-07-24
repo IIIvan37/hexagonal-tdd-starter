@@ -46,6 +46,6 @@
 ## State to resume from
 
 - **Single next action**: merge the `fix/eject-skeleton-and-doc-truth` PR on
-  green CI; then step 4 — the first real feature / loupe migration (second
+  green CI; then step 4 — the first real feature (second
   adapter proving port substitutability).
 - Gotchas / half-done edits: none — working tree clean after the report commit.

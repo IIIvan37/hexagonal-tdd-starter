@@ -5,7 +5,7 @@
 // Run: pnpm modules:hint   (typically at a close-step, see /session-report)
 //
 // Signals reported:
-//   - prefix clusters: >= 3 files sharing a kebab-case prefix (in loupe, the
+//   - prefix clusters: >= 3 files sharing a kebab-case prefix (in the field project, the
 //     `chord-*` x5 cluster screamed for weeks before anyone looked);
 //   - internal cohesion: how much the cluster imports itself vs the rest.
 

@@ -29,7 +29,7 @@ PR9: implementation of [ADR-0006](../adr/0006-emergent-feature-modules.md)
 
 ## Not done / remaining
 
-- **Loupe migration**: unblocked now — the mechanism it needs exists and is
+- **Field-project migration**: unblocked now — the mechanism it needs exists and is
   proven. Known first moves are in the 2026-07-21 module-discovery report.
 - Dependabot #8/#9 still open (#9 conflicts with the rewritten ci.yml — close
   and let it regenerate).

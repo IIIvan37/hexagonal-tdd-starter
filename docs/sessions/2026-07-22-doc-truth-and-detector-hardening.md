@@ -45,7 +45,7 @@
 ## Not done / remaining
 - The honest-review follow-ups not in this step's scope: an explicit audience
   statement in the README, and a second adapter package to prove port
-  substitutability (expected to come with the loupe migration).
+  substitutability (expected to come with a later second-adapter step).
 
 ## Decisions
 - The testing barrel is a Sheriff entry point; `core:testing → nursery` is
