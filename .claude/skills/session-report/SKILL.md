@@ -57,8 +57,14 @@ working set just stays scannable.
 non-blank lines by `docs/docs.spec.ts`, which fails the gate if it drifts.
 Rewrite it, don't append:
 
-- **Where we are** — branch, phase, packages. Replace the old text.
+- **Where we are** — phase, step, packages. Replace the old text.
 - **Next action** — the SINGLE next thing. Replace it.
+- **Write it merge-invariantly.** STATUS ships inside the PR but is read on
+  `main` after the merge — any fact that flips at merge time is born stale.
+  Name the step and its PR ("step N, delivered by PR #NN" is true before and
+  after), never the feature branch or the PR's lifecycle state ("PR opening",
+  "merge on green CI"); make the next action the one that follows the merge.
+  Only the dated report keeps pre-merge phrasing (it describes a past).
 - **Current milestone** — the milestone in flight and the next one only. Collapse
   a finished milestone to one line; the detail is in `git log` and the reports.
 - **Open questions** — only what is genuinely undecided. **Delete** each one when
@@ -83,8 +89,9 @@ The report + STATUS update describe the work the PR contains, so they ship
 
 - Commit them on the **feature branch**, before `gh pr create`. Order per feature:
   feature commits → this report commit → `pnpm gate` → push → open PR → merge.
-- Phrase the report for the **pre-merge** state ("PR #N opened", branch still
-  current) — not as if it were already merged.
+- Phrase the **dated report** for the **pre-merge** state ("PR #N opened",
+  branch still current) — not as if it were already merged. STATUS is the
+  opposite (see step 4): merge-invariant, because it lives on `main`.
 - The doc-only-direct-to-`main` exception (see the `block-commit-on-main` hook) is
   only for a **standalone** report not tied to a code PR; a report that accompanies
   code goes in that code's PR.

@@ -6,24 +6,22 @@
 
 ## Where we are
 
-- **Phase**: detector hardening + doc truth merged (PR #21, Windows follow-up
-  PR #22); `main` is green.
-- **Branch**: `fix/eject-skeleton-and-doc-truth` — post-merge review fixes:
-  the ejected skeleton's gate is green again (the public-surface grammar
-  accepts the empty-module marker `export {}`; the tdd-cycle skill no longer
-  names the example's port path), Biome schema realigned to 2.5.5, STATUS
-  refreshed, plus [ADR-0007](adr/0007-frontend-agnostic-starter.md) (the
-  starter stays frontend-agnostic; a UI is an adapter the consuming project
-  owns).
+- **Phase**: post-merge review fixes delivered by PR #23 — the ejected
+  skeleton's gate is green again (the public-surface grammar accepts the
+  empty-module marker `export {}`; the tdd-cycle skill no longer names the
+  example's port path), Biome schema realigned to 2.5.5, and
+  [ADR-0007](adr/0007-frontend-agnostic-starter.md) records that the starter
+  stays frontend-agnostic (a UI is an adapter the consuming project owns).
 - **Core anatomy**: nurseries (`domain/`, `application/`, currently empty) →
   extracted feature modules (`greet/` is the worked example) + `shared/`
   kernel; public surface and purity fitness-checked.
-- **Health**: 179 tests, 100 % coverage, 100 % mutation score (Stryker, local);
+- **Health**: 179 tests, 100 % coverage, 100 % mutation score;
   the ejected skeleton's gate replayed green in an isolated worktree.
 
 ## Next action
 
-Open the PR for `fix/eject-skeleton-and-doc-truth`; merge on green CI.
+Start step 4: the first real feature / loupe migration — the second adapter
+that proves port substitutability.
 
 ## Current milestone
 
@@ -31,7 +29,7 @@ Open the PR for `fix/eject-skeleton-and-doc-truth`; merge on green CI.
 |------|-------------|--------|
 | 1 | Hardening + emergent modules (ADR-0006) | ✅ merged |
 | 2 | Detector hardening + doc truth (honest-review follow-up) | ✅ merged |
-| 3 | Post-merge review fixes (eject red skeleton, doc drift) + ADR-0007 | 🔄 PR opening |
+| 3 | Post-merge review fixes (eject red skeleton, doc drift) + ADR-0007 | ✅ PR #23 |
 | 4 | _your first real feature_ / loupe migration — brings the second adapter that proves port substitutability | ⬜ |
 
 ## Open questions
@@ -42,6 +40,7 @@ Open the PR for `fix/eject-skeleton-and-doc-truth`; merge on green CI.
 - **Should the README state its audience?** The honest review says the
   template's real product is the agent-operated method; undecided whether the
   README should say so explicitly.
-- **Can STATUS staleness be fitness-checked?** The path checker catches broken
-  file mentions, not a stale branch name or test count — this very rewrite was
-  triggered by review, not by the gate. No mechanical check yet.
+- **Can STATUS staleness be fitness-checked?** Merge-invariant phrasing (the
+  session-report skill now demands it) removes the class that flips at merge —
+  branch names, PR lifecycle — but a stale test count or phase still needs a
+  reader to notice. No mechanical check yet.
