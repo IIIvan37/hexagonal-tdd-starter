@@ -46,7 +46,8 @@ Take the **smallest** step that goes green, even if it looks absurd:
    branches, no handling cases no test asks for.
 
 Keep `core` pure: if you reach for `node:*`, `window`, or fs, the logic is in the
-wrong layer — put a port in `application/ports.ts` and the impl in an adapter.
+wrong layer — declare a port in the application layer (a `ports.ts` beside the
+use-case; `greet` is the worked example) and put the impl in an adapter.
 Biome (`noRestricted*` on `packages/core`) catches the leak; Sheriff catches a bad
 cross-layer dependency.
 

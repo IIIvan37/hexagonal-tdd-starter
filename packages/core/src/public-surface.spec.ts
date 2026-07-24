@@ -46,7 +46,7 @@ function barrelViolationsOf(source: string): readonly string[] {
     .replace(/export\s+(?:type\s+)?\{[^}]*\}\s+from\s+'[^']*'/g, '')
     .split('\n')
     .map((line) => line.trim())
-    .filter((line) => line !== '')
+    .filter((line) => line !== '' && !/^export\s*\{\s*\}$/.test(line))
 }
 
 /** Named VALUE exports of a barrel: `export { a, b } from …` (not `export type`). */
@@ -105,6 +105,12 @@ describe('the detector itself', () => {
     ]
   ])('rejects %j (%s)', (line) => {
     expect(barrelViolationsOf(line)).toHaveLength(1)
+  })
+
+  it('accepts the empty-module marker `export {}` (the ejected surface)', () => {
+    // The ejected skeleton's index.ts is `export {}` — an empty surface is
+    // legitimate, and the marker exports no name the orphan check could miss.
+    expect(barrelViolationsOf('export {}')).toEqual([])
   })
 
   it('accepts the full grammar: comments, export {} from, export type {} from', () => {
