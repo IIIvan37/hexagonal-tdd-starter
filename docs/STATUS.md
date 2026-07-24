@@ -21,8 +21,8 @@
 
 ## Next action
 
-Start the first real feature / loupe migration — the second adapter that
-proves port substitutability.
+Start the first real feature — the second adapter that proves port
+substitutability.
 
 ## Current milestone
 
@@ -32,7 +32,7 @@ proves port substitutability.
 | 2 | Detector hardening + doc truth (honest-review follow-up) | ✅ merged |
 | 3 | Post-merge review fixes (eject red skeleton, doc drift) + ADR-0007 | ✅ PR #23 |
 | 4 | DX findings (strip-only tree-wide, honest bootstrap, skills ↔ tree) | ✅ delivered by the DX-findings PR |
-| 5 | _your first real feature_ / loupe migration — brings the second adapter that proves port substitutability | ⬜ |
+| 5 | _your first real feature_ — brings the second adapter that proves port substitutability | ⬜ |
 
 ## Open questions
 
