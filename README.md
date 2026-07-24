@@ -99,9 +99,10 @@ directly) before `pnpm install`.
 
 ## After cloning: protect `main` on GitHub
 
-The husky hooks and `block-commit-on-main` only guard **your machine**. A
-collaborator, or you on another checkout, can push straight to `main` unless the
-remote enforces it too:
+The husky hooks and `block-commit-on-main` only guard **your machine** — and
+GitHub settings don't travel with a template: every project cloned from this
+one must enable protection itself. A collaborator, or you on another checkout,
+can push straight to `main` unless the remote enforces it too:
 
 ```sh
 gh api -X PUT repos/{owner}/{repo}/branches/main/protection --input - <<'EOF'
@@ -121,6 +122,17 @@ EOF
 endpoint requires for `restrictions`.)
 
 Without this, the local hooks are a convention, not a guarantee.
+
+**Pick your `enforce_admins`** — it decides the fate of the doc-only exception
+(the local convention that lets a `*.md`/`docs/**` commit land straight on
+`main`):
+
+- `true` (above): **everything** goes through a PR, docs included — required
+  checks apply to admins too, so a direct doc push is refused. Strictest, and
+  the doc-only exception effectively dies at the remote.
+- `false`: collaborators are held to PRs, but admins keep the direct doc-only
+  path. The pragmatic choice for a solo maintainer — it matches how the local
+  hooks behave.
 
 ## Anatomy: skeleton vs example
 
