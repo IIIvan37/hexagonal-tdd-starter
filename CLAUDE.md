@@ -22,6 +22,9 @@ domain.
   / `pnpm check:dead` / `pnpm check:dup`.
 - Run the example: `pnpm greet <name>`.
 - `pnpm modules:hint` — module candidates in the nursery (hint, never a verdict).
+- `pnpm arch:map` — regenerate `docs/ARCHITECTURE.md` (module-level Mermaid map
+  from Sheriff's own graph). The gate fails when the committed map drifts from
+  the tree — regenerate in the same commit that reshapes the graph.
 
 ## Architecture (hexagonal)
 

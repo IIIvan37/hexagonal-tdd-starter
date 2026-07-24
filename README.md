@@ -57,6 +57,10 @@ there, the ceremony costs more than it protects.
   finding fails the build.
 - **Mutation testing** (Stryker, scoped to the pure core) — run locally before the
   PR, and in CI post-merge.
+- **A self-truthful architecture map** (`docs/ARCHITECTURE.md`): a module-level
+  Mermaid diagram generated from the same graph Sheriff enforces
+  (`pnpm arch:map`) — an emerged feature appears as a subgraph the moment it is
+  extracted, and the gate fails if the committed map drifts from the tree.
 - **TDD strict** with fast-check property tests; one example vertical slice, tested
   at three altitudes that catch different things:
   - **port contracts** (`@app/core/testing`) — written once per port, replayed
