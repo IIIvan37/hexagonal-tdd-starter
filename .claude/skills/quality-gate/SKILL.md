@@ -14,26 +14,37 @@ finding means the change is **not done**. Fix it, don't note it.
 pnpm gate
 ```
 
-`gate` runs, in order (parallelized by pnpm's script regex):
+`gate` expands (pnpm script regex) to six checks — what each one guards:
 
 1. `pnpm typecheck` — `tsc --noEmit`, strict (all `noUnused*`,
-   `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`).
+   `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`), plus
+   `erasableSyntaxOnly`: the strip-only invariant (no `enum`, parameter
+   properties, `namespace`, decorators) is rejected by the compiler anywhere
+   in the tree — even in a file no import reaches yet; the binary test then
+   proves it on the shipped bin.
 2. `pnpm check` — biome lint + format.
-3. `pnpm check:arch` — `sheriff verify`: hexagonal layering on the module graph
-   (`core:domain` → nothing, `application` → `domain`, `cli` → `core:api`). Browser
-   globals and `node:*` imports in the core are caught by Biome (step 2, override on
-   `packages/core`), not by Sheriff.
+3. `pnpm check:arch` — `sheriff verify` on the real module graph, two tag
+   dimensions (`sheriff.config.ts`, ADR-0006): `layer:*` for the hexagon
+   (`domain` → nothing, `application` → `domain`, adapters → `core:api`) and
+   `feature:*` from dormant placeholders — features are isolated by default
+   and may never import the nursery (the ratchet). Two entry points: the cli
+   and the `@app/core/testing` barrel. Browser globals and `node:*` imports in
+   the core are caught by Biome (step 2, override on `packages/core`), not by
+   Sheriff; spec files are invisible to Sheriff by construction.
 4. `pnpm test:coverage` — vitest, **100 % thresholds on every file** (statements,
    branches, functions, lines). Test-first means covered, so a drop is a
    regression, not a budget. The only exclusion is `cli/src/main.ts`, the
-   `process.exit` boundary, covered by `main.spec.ts` running the real binary.
-   Includes `packages/core/src/purity.spec.ts`, the **fitness function** for
-   ambient state Biome cannot express (`Math.random()`, `Date.now()`,
-   `process.env`, `globalThis.…`).
-5. `pnpm check:dead` — knip (orphan exports / dead code). Caveat: `@app/core`'s
-   `index.ts` is the package entry, so a **core public export with no consumer
-   yet is NOT flagged** — the application README registry and review are the
-   guard there.
+   process boundary (it sets `process.exitCode` — never `process.exit()`, which
+   would tear down before stdout drains), covered by `main.spec.ts` running the
+   real binary. Includes the two **fitness functions**:
+   `packages/core/src/purity.spec.ts` for ambient state Biome cannot express
+   (`Math.random()`, `Date.now()`, `process.env`, `globalThis.…`) and
+   `packages/core/src/public-surface.spec.ts`, which fails on any core value
+   export no adapter imports.
+5. `pnpm check:dead` — knip (orphan exports / dead code). `@app/core`'s
+   `index.ts` is the package entry, so knip cannot flag an unconsumed core
+   public export — that gap is closed by `public-surface.spec.ts` (step 4);
+   the application README registry stays the human-readable map.
 6. `pnpm check:dup` — jscpd (copy-paste). `.jscpd.json` sets **threshold 0**
    (spec files excluded): greenfield, so any clone fails the gate. Factor it
    out — never raise the threshold.
