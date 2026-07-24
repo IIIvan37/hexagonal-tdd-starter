@@ -5,6 +5,24 @@ A reusable starter for a **pnpm monorepo** with a **pure hexagonal core**,
 encode the method. Domain-agnostic: it ships one tiny example slice (`greet`) and
 nothing else, so you can replace it with your own domain immediately.
 
+## Who this is for
+
+This starter optimizes **long-term drift prevention**, not onboarding speed —
+the gate runs six blocking checks in pre-commit, coverage is 100 % per file,
+duplication has a zero threshold, mutation runs locally before every PR, and
+each step closes with a session report. That ceremony pays for itself when the
+product is **durable, framework-independent domain logic**: a CLI, a backend,
+or a UI that carries a substantial domain — the UI is just another adapter
+consuming `@app/core`
+([ADR-0007](docs/adr/0007-frontend-agnostic-starter.md): the starter ships
+none on purpose, React/Angular/Vue plug in like the CLI does). The method is
+designed to be **agent-operated** (the skills encode it), and assumes a team
+willing to work test-first.
+
+It is the wrong tool for a prototype, for thin CRUD that mostly delegates to a
+remote API, or for a codebase with little logic independent of its framework —
+there, the ceremony costs more than it protects.
+
 ## What's in the box
 
 - **Hexagonal layering**, enforced three ways:
@@ -48,8 +66,9 @@ nothing else, so you can replace it with your own domain immediately.
   - **binary test** (`cli/src/main.spec.ts`) — the shipped bin under plain `node`.
 - **No build step**: the bin runs the `.ts` sources directly through Node's type
   stripping, so the sources stay in the strip-only subset (no parameter properties,
-  enums, namespaces, decorators) — an invariant held by a test that runs the real
-  binary under plain `node`.
+  enums, namespaces, decorators) — an invariant held twice: `erasableSyntaxOnly`
+  makes `tsc` reject the syntax anywhere in the tree (even in a file no import
+  reaches yet), and a test runs the real binary under plain `node`.
 - **Guardrails**: husky `pre-commit` (gate) + `commit-msg` (commitlint), a
   `block-commit-on-main` hook (code needs a branch+PR; docs may go straight to main).
 - **CI** (GitHub Actions), two tiers: gate + commitlint + dependency audit on
@@ -64,16 +83,19 @@ nothing else, so you can replace it with your own domain immediately.
 
 ```sh
 # scaffold a new project from this template
-npx degit <your-org>/hexagonal-tdd-starter my-project
+npx degit IIIvan37/hexagonal-tdd-starter my-project
 cd my-project
-corepack enable
+corepack enable    # Node 24 only — see the note below for Node ≥ 25
 pnpm install
 pnpm gate          # everything green
 pnpm greet Ada     # → Good {morning,afternoon,evening}, Ada! — the real clock decides
 ```
 
 Requires Node ≥ 24 (see `.nvmrc`) — not a whim: the bin runs the `.ts` sources
-through Node's native type stripping, no build step — and pnpm via Corepack.
+through Node's native type stripping, no build step. **pnpm**: Node 24 still
+bundles Corepack, so `corepack enable` is enough; Node ≥ 25 does not ship it
+anymore — run `npm install -g corepack && corepack enable` (or install pnpm
+directly) before `pnpm install`.
 
 ## After cloning: protect `main` on GitHub
 
