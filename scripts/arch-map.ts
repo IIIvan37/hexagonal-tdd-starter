@@ -48,66 +48,89 @@ function nodeOf(module: string, tags: readonly string[]): ModuleNode {
   return { module, tags, pkg, feature, label }
 }
 
-/** Fold file-level graphs (one per entry point) into one module-level map. */
-export function mermaidOf(datas: readonly Record<string, FileEntry>[]): string {
+// Code-unit order on purpose, NOT localeCompare: the map is a golden file
+// compared across OSes, and locale-aware order varies with the ICU build.
+const byCodeUnit = (a: string, b: string): number => {
+  if (a < b) {
+    return -1
+  }
+  return a > b ? 1 : 0
+}
+
+const uniqueSorted = (values: readonly (string | null)[]): string[] =>
+  [...new Set(values.filter((v): v is string => v !== null))].sort(byCodeUnit)
+
+const nodeLine = (node: ModuleNode, indent: string): string =>
+  `${indent}${idOf(node.module)}["${node.label}"]`
+
+/** File-level graphs folded to module level: one node set, deduped edges. */
+function foldedGraphOf(datas: readonly Record<string, FileEntry>[]): {
+  nodes: readonly ModuleNode[]
+  edges: readonly string[]
+} {
   const moduleOfFile = new Map<string, string>()
   const tagsOfModule = new Map<string, readonly string[]>()
-  for (const data of datas) {
-    for (const [file, entry] of Object.entries(data)) {
-      moduleOfFile.set(posix(file), posix(entry.module))
-      tagsOfModule.set(posix(entry.module), entry.tags)
-    }
+  const files = datas.flatMap((data) => Object.entries(data))
+  for (const [file, entry] of files) {
+    moduleOfFile.set(posix(file), posix(entry.module))
+    tagsOfModule.set(posix(entry.module), entry.tags)
   }
 
   const edges = new Set<string>()
-  for (const data of datas) {
-    for (const [file, entry] of Object.entries(data)) {
-      const from = moduleOfFile.get(posix(file))
-      for (const imported of entry.imports) {
-        const to = moduleOfFile.get(posix(imported))
-        if (from !== undefined && to !== undefined && from !== to) {
-          edges.add(`${idOf(from)} --> ${idOf(to)}`)
-        }
+  for (const [file, entry] of files) {
+    const from = moduleOfFile.get(posix(file))
+    for (const imported of entry.imports) {
+      const to = moduleOfFile.get(posix(imported))
+      if (from !== undefined && to !== undefined && from !== to) {
+        edges.add(`${idOf(from)} --> ${idOf(to)}`)
       }
     }
   }
 
   const nodes = [...tagsOfModule.entries()]
     .map(([module, tags]) => nodeOf(module, tags))
-    .sort((a, b) => a.module.localeCompare(b.module))
+    .sort((a, b) => byCodeUnit(a.module, b.module))
+  return { nodes, edges: [...edges].sort(byCodeUnit) }
+}
 
-  const lines: string[] = ['flowchart LR']
-  const packages = [
-    ...new Set(nodes.map((n) => n.pkg).filter((p): p is string => p !== null))
-  ].sort()
+const featureLines = (
+  feature: string,
+  members: readonly ModuleNode[]
+): string[] => [
+  `    subgraph feature_${idOf(feature)}["feature: ${feature}"]`,
+  ...members.map((node) => nodeLine(node, '      ')),
+  '    end'
+]
 
-  for (const node of nodes.filter((n) => n.pkg === null)) {
-    lines.push(`  ${idOf(node.module)}["${node.label}"]`)
-  }
-  for (const pkg of packages) {
-    lines.push(`  subgraph pkg_${idOf(pkg)}["${pkg}"]`)
-    const inPkg = nodes.filter((n) => n.pkg === pkg)
-    for (const node of inPkg.filter((n) => n.feature === null)) {
-      lines.push(`    ${idOf(node.module)}["${node.label}"]`)
-    }
-    const features = [
-      ...new Set(
-        inPkg.map((n) => n.feature).filter((f): f is string => f !== null)
+const packageLines = (
+  pkg: string,
+  members: readonly ModuleNode[]
+): string[] => [
+  `  subgraph pkg_${idOf(pkg)}["${pkg}"]`,
+  ...members.filter((n) => n.feature === null).map((n) => nodeLine(n, '    ')),
+  ...uniqueSorted(members.map((n) => n.feature)).flatMap((feature) =>
+    featureLines(
+      feature,
+      members.filter((n) => n.feature === feature)
+    )
+  ),
+  '  end'
+]
+
+/** Fold file-level graphs (one per entry point) into one module-level map. */
+export function mermaidOf(datas: readonly Record<string, FileEntry>[]): string {
+  const { nodes, edges } = foldedGraphOf(datas)
+  return [
+    'flowchart LR',
+    ...nodes.filter((n) => n.pkg === null).map((n) => nodeLine(n, '  ')),
+    ...uniqueSorted(nodes.map((n) => n.pkg)).flatMap((pkg) =>
+      packageLines(
+        pkg,
+        nodes.filter((n) => n.pkg === pkg)
       )
-    ].sort()
-    for (const feature of features) {
-      lines.push(`    subgraph feature_${idOf(feature)}["feature: ${feature}"]`)
-      for (const node of inPkg.filter((n) => n.feature === feature)) {
-        lines.push(`      ${idOf(node.module)}["${node.label}"]`)
-      }
-      lines.push('    end')
-    }
-    lines.push('  end')
-  }
-  for (const edge of [...edges].sort()) {
-    lines.push(`  ${edge}`)
-  }
-  return lines.join('\n')
+    ),
+    ...edges.map((edge) => `  ${edge}`)
+  ].join('\n')
 }
 
 /** Rewrite docs/ARCHITECTURE.md from the current tree. */
