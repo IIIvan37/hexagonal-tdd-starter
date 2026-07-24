@@ -6,18 +6,18 @@
 
 ## Where we are
 
-- **Phase**: DX-review findings folded in — the strip-only subset is enforced
-  tree-wide by `tsc` (`erasableSyntaxOnly`, second lock on
-  [ADR-0001](adr/0001-strip-only-typescript-no-build-step.md)), the README
-  bootstrap is honest about Node ≥ 25 lacking Corepack, the quick start is
-  copyable, the README states its audience, and the skills were reconciled
-  with the tree (one **behavior** per test; quality-gate describes the
-  current Sheriff tags, `public-surface.spec.ts`, and the `exitCode`
-  boundary).
+- **Phase**: the architecture is now **visualized and drift-proof** —
+  [ARCHITECTURE.md](ARCHITECTURE.md) is a module-level Mermaid map generated
+  from Sheriff's own graph (`pnpm arch:map`); an emerged feature appears as a
+  subgraph the moment it exists, the gate fails when the committed map drifts,
+  and the eject regenerates it. Before that, the DX-review findings landed
+  (strip-only enforced tree-wide via `erasableSyntaxOnly`, honest Node ≥ 25
+  bootstrap, explicit audience, skills reconciled with the tree).
 - **Core anatomy**: nurseries (`domain/`, `application/`, currently empty) →
   extracted feature modules (`greet/` is the worked example) + `shared/`
   kernel; public surface and purity fitness-checked.
-- **Health**: 179 tests, 100 % coverage, 100 % mutation score.
+- **Health**: 187 tests, 100 % coverage, 100 % mutation score; ejected
+  skeleton replayed green (map included).
 
 ## Next action
 
@@ -31,8 +31,9 @@ substitutability.
 | 1 | Hardening + emergent modules (ADR-0006) | ✅ merged |
 | 2 | Detector hardening + doc truth (honest-review follow-up) | ✅ merged |
 | 3 | Post-merge review fixes (eject red skeleton, doc drift) + ADR-0007 | ✅ PR #23 |
-| 4 | DX findings (strip-only tree-wide, honest bootstrap, skills ↔ tree) | ✅ delivered by the DX-findings PR |
-| 5 | _your first real feature_ — brings the second adapter that proves port substitutability | ⬜ |
+| 4 | DX findings (strip-only tree-wide, honest bootstrap, skills ↔ tree) | ✅ PR #24 |
+| 5 | Architecture map (generated from Sheriff's graph, drift-checked) | ✅ delivered by the arch-map PR |
+| 6 | _your first real feature_ — brings the second adapter that proves port substitutability | ⬜ |
 
 ## Open questions
 
