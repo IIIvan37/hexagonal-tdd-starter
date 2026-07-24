@@ -7,7 +7,7 @@ lost". Everything durable is in [ADR-0006](../adr/0006-emergent-feature-modules.
 
 ## Done
 
-- **Analyzed loupe** (`~/perso/loupe`), a real project built on this starter,
+- **Analyzed the field project**, a real project built on this starter,
   as the field case. Method: import graph over `core/src/domain` (48 files, 52
   internal edges) + `application` (11 use-cases), hypothesis clusters by file
   prefix, cross-cluster edge count, then read the suspicious edges in the code.
@@ -18,7 +18,7 @@ lost". Everything durable is in [ADR-0006](../adr/0006-emergent-feature-modules.
   306-line / 24-export god-file, and use-cases that otherwise map 1:1 to
   clusters (`detect-tempo` → rhythm…; `detect-chords` spans 3 → a composition
   use-case; `error-message` → shared).
-- Nuance that matters: 52 edges / 55 files is a SPARSE graph. Loupe is not a
+- Nuance that matters: 52 edges / 55 files is a SPARSE graph. The field project is not a
   ball of mud — it is an illegible-but-decoupled domain with two nascent
   cycles. Migration is an afternoon now, a project later.
 - **Strategy designed and recorded** (ADR-0006): emergent modules — nursery,
@@ -36,8 +36,8 @@ lost". Everything durable is in [ADR-0006](../adr/0006-emergent-feature-modules.
 
 - **PR9 (implementation) not started** — three decisions block it, listed at
   the end of ADR-0006: greet extracted vs nursery; sequencing (stacked now /
-  after merge / loupe map first); ship `modules:hint` or not.
-- Loupe itself untouched, on purpose ("before touching loupe, settle the
+  after merge / field map first); ship `modules:hint` or not.
+- The field project itself untouched, on purpose ("before touching it, settle the
   template strategy"). Its candidate fixes are known: promote
   `sequenceAgreement` + `beat-grid` & friends to a kernel, move
   `SEEK_STEP_SECONDS` out of `key-bindings`, decide whether `key-bindings`
@@ -47,7 +47,7 @@ lost". Everything durable is in [ADR-0006](../adr/0006-emergent-feature-modules.
 ## Decisions
 
 - Emergent modularity over feature-first-from-day-one — [ADR-0006](../adr/0006-emergent-feature-modules.md)
-  (proposed; the why, the mechanism, and the loupe evidence live there, not here).
+  (proposed; the why, the mechanism, and the field evidence live there, not here).
 
 ## Gate status
 
@@ -62,7 +62,7 @@ lost". Everything durable is in [ADR-0006](../adr/0006-emergent-feature-modules.
   PR9 also carries the public-surface fitness function (every index.ts export
   has an external consumer — doctrine already in /new-feature-hexa).
 - Gotchas:
-  - The loupe analysis is reproducible: import-graph + prefix-cluster script
+  - The field analysis is reproducible: import-graph + prefix-cluster script
     over `packages/core/src/{domain,application}` — 10 lines of python; the
     numbers above are from 2026-07-21.
   - Sheriff placeholder syntax (`src/<feature>/domain`) is assumed from its

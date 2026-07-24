@@ -54,5 +54,5 @@
 ## State to resume from
 
 - **Single next action**: merge the DX-findings PR on green CI; then the first
-  real feature / loupe migration (second adapter proving port substitutability).
+  real feature (second adapter proving port substitutability).
 - Gotchas / half-done edits: none — working tree clean after the report commit.
