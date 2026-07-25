@@ -18,7 +18,10 @@
 import { spawnSync } from 'node:child_process'
 
 const CORE_PREFIX = 'packages/core/src/'
-const NURSERY = ['domain', 'application']
+
+const sorted = (values: ReadonlySet<string>): string[] =>
+  [...values].sort((a, b) => a.localeCompare(b))
+const NURSERY = new Set(['domain', 'application'])
 
 function gitLines(args: readonly string[]): string[] {
   const result = spawnSync('git', [...args], { encoding: 'utf8' })
@@ -50,7 +53,7 @@ for (const file of changed) {
   const segment = file.slice(CORE_PREFIX.length).split('/')[0] as string
   if (segment.endsWith('.ts')) continue // root files (index.ts, fitness specs)
   if (segment === 'testing') continue // fakes barrel — never mutated
-  if (NURSERY.includes(segment)) {
+  if (NURSERY.has(segment)) {
     for (const nursery of NURSERY) scopes.add(nursery)
   } else {
     scopes.add(segment)
@@ -66,12 +69,12 @@ if (scopes.size === 0) {
 }
 
 const globs = [
-  ...[...scopes].sort().map((scope) => `${CORE_PREFIX}${scope}/**/*.ts`),
+  ...sorted(scopes).map((scope) => `${CORE_PREFIX}${scope}/**/*.ts`),
   `!${CORE_PREFIX}**/*.spec.ts`,
   `!${CORE_PREFIX}**/testing/**`
 ]
 
-console.log(`mutation:diff — scopes: ${[...scopes].sort().join(', ')}`)
+console.log(`mutation:diff — scopes: ${sorted(scopes).join(', ')}`)
 // --force: the incremental cache goes stale on survived mutants (new tests do
 // not re-challenge them); a scoped fresh run is both faster and truthful.
 const run = spawnSync(
