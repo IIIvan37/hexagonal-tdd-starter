@@ -22,6 +22,7 @@ import {
   writeFileSync
 } from 'node:fs'
 import { join } from 'node:path'
+import { writeArchitectureMap } from './arch-map.ts'
 
 const DELETE_MARKER = 'EXAMPLE (greet slice) — DELETE'
 const REWRITE_MARKER = 'EXAMPLE CONTENT, SKELETON ROLE'
@@ -195,6 +196,11 @@ for (const [file, stub] of Object.entries(STUBS)) {
 }
 writeFileSync('packages/core/src/application/README.md', REGISTRY_STUB)
 console.log('  ↺ packages/core/src/application/README.md (registry emptied)')
+
+// The map is generated from the tree, so the eject reshapes it: regenerate in
+// the same operation, or docs/architecture.spec.ts fails the very next gate.
+writeArchitectureMap(process.cwd())
+console.log('  ↺ docs/ARCHITECTURE.md (regenerated from the ejected tree)')
 
 console.log(
   '\nDependencies knip would flag (re-add when your feature needs them):'

@@ -198,6 +198,7 @@ function livingDocs(): readonly string[] {
     'CLAUDE.md',
     'CONTRIBUTING.md',
     'docs/STATUS.md',
+    'docs/ARCHITECTURE.md',
     'docs/adr/README.md',
     ...skills,
     ...registries
