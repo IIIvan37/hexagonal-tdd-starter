@@ -28,6 +28,10 @@ const STATUS_MAX_LINES = 60
 /** Reports kept in the working set; older ones move to sessions/archive/. */
 const ACTIVE_SESSIONS_MAX = 5
 
+/** Active root documents (STATUS, live plans, runbooks); finished plans move
+ * to archive/. */
+const ACTIVE_ROOT_DOCS_MAX = 8
+
 const linesOf = (path: string) =>
   readFileSync(path, 'utf8')
     .split('\n')
@@ -59,6 +63,18 @@ describe('docs/STATUS.md stays a snapshot, not a log', () => {
       '\nSTATUS.md links individual session reports, which grows by one line per' +
         '\nsession. Link the docs/sessions/ directory instead.'
     ).toEqual([])
+  })
+})
+
+describe('docs root stays scannable', () => {
+  it(`keeps at most ${ACTIVE_ROOT_DOCS_MAX} active documents`, () => {
+    const active = markdownIn(DOCS)
+    expect(
+      active.length,
+      `\ndocs/ holds ${active.length} root documents (max ${ACTIVE_ROOT_DOCS_MAX}).` +
+        '\nA finished plan is not deleted, it is archived: git mv it to' +
+        '\ndocs/archive/ — readable forever, out of the working set.'
+    ).toBeLessThanOrEqual(ACTIVE_ROOT_DOCS_MAX)
   })
 })
 
