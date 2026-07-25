@@ -14,10 +14,14 @@ domain.
 - `pnpm gate` — **the blocking quality gate**: typecheck → biome → `check:arch`
   (Sheriff) → tests with coverage → knip → jscpd. Run before declaring anything done.
 - `pnpm test` / `pnpm test:watch` / `pnpm test:coverage` — vitest (`*.spec.ts`,
-  colocated). Run one: `pnpm test -- <path-or-name>`.
-- `pnpm test:mutation` — Stryker, scoped to `@app/core`. **Run it locally at each
-  close-step, before opening the PR** (wired into `/session-report`). Also runs in
-  CI post-merge. Kept out of `gate` (too slow per commit).
+  colocated). Run one: `pnpm test <path>` (NOT `pnpm test -- <path>` — the `--`
+  defeats the filter and the whole suite runs).
+- `pnpm test:mutation:diff` — Stryker scoped to the core modules the branch
+  touches (`scripts/mutation-diff.ts`). **Run it locally at each close-step,
+  before opening the PR** (wired into `/session-report`). The full run
+  (`pnpm test:mutation`) stays CI's post-merge job — that one is authoritative.
+  Kept out of `gate` (too slow per commit). One heavy run at a time: never
+  overlap Stryker with `gate` or a full suite (CPU starvation fails tests).
 - `pnpm typecheck` / `pnpm check` / `pnpm check:fix` / `pnpm check:arch`
   / `pnpm check:dead` / `pnpm check:dup`.
 - Run the example: `pnpm greet <name>`.

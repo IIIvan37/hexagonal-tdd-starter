@@ -19,11 +19,14 @@ git status --short
 Then run the quality gate and record the result:
 
 - `pnpm gate` (typecheck + biome + arch + tests with coverage + knip + jscpd).
-- **Mutation testing locally (Stryker).** If the step touched `@app/core` (the
-  mutated scope), run `pnpm test:mutation` and report the score in the gate
-  section. The CI post-merge run is a backstop, not the gate — surviving mutants
-  must be caught **before** the PR, while the code is fresh. Skip only when the
-  step touched no mutated package (say so).
+- **Mutation testing locally (Stryker), scoped to the diff.** If the step
+  touched `@app/core` (the mutated scope), run `pnpm test:mutation:diff` — it
+  mutates only the core modules the branch touches — and report the score in
+  the gate section. Surviving mutants must be caught **before** the PR, while
+  the code is fresh. The FULL run (`pnpm test:mutation`) is CI's post-merge
+  job and stays authoritative — never claim its score locally. Skip only when
+  the step touched no mutated package (say so). One heavy run at a time (no
+  Stryker concurrent with `gate` or a full suite — CPU starvation fails tests).
 - Don't fabricate a green check — report failures honestly.
 - **Module watch** (ADR-0006): does a prefix/concept now appear >= 3 times in
   the nursery? does a use-case + port serve a single cluster? `pnpm
