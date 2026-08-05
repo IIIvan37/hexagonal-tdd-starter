@@ -8,10 +8,11 @@ onlyBuiltDependencies:
 # Each override pins WITHIN the major the parent expects; drop it once
 # `pnpm why <pkg>` shows a patched version natively.
 # - fast-uri (via ajv < commitlint): host confusion, GHSA-4c8g-83qw-93j6 +
-#   GHSA-v2hh-gcrm-f6hx — patched in 3.1.4 (3.x line) / 4.1.1 (4.x line).
-# - brace-expansion (via minimatch < stryker): GHSA-mh99-v99m-4gvg — patched
-#   in 5.0.8 (5.x line).
+#   GHSA-v2hh-gcrm-f6hx + GHSA-7p8r-x3mc-p8w7 — patched in 3.1.5 (3.x line)
+#   / 4.1.1 (4.x line).
+# - brace-expansion (via minimatch < stryker): GHSA-mh99-v99m-4gvg +
+#   GHSA-rgw5-rvv9-x895 — patched in 5.0.9 (5.x line).
 overrides:
-  'fast-uri@>=3.0.0 <4.0.0': '^3.1.4'
+  'fast-uri@>=3.0.0 <3.1.5': '^3.1.5'
   'fast-uri@>=4.0.0 <4.1.1': '^4.1.1'
-  'brace-expansion@>=3.0.0 <=5.0.7': '^5.0.8'
+  'brace-expansion@>=3.0.0 <5.0.9': '^5.0.9'

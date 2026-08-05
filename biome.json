@@ -1,10 +1,19 @@
 {
   "$schema": "https://biomejs.dev/schemas/2.5.5/schema.json",
-  "assist": { "actions": { "source": { "organizeImports": "on" } } },
+  "assist": {
+    "actions": {
+      "source": {
+        "organizeImports": "on"
+      }
+    }
+  },
   "linter": {
     "enabled": true,
     "rules": {
-      "preset": "recommended"
+      "preset": "recommended",
+      "nursery": {
+        "useExhaustiveSwitchCases": "error"
+      }
     }
   },
   "formatter": {
@@ -36,6 +45,7 @@
       "**/*.ts",
       "**/*.json",
       "!**/node_modules",
+      "!**/.claude",
       "!**/dist",
       "!**/coverage",
       "!**/reports",
