@@ -160,6 +160,27 @@ function dropDependency(path: string, section: string, name: string): void {
   }
 }
 
+/** Renames a root-level npm script, keeping its command. */
+function renameScript(path: string, from: string, to: string): void {
+  const pkg = JSON.parse(readFileSync(path, 'utf8'))
+  if (pkg.scripts?.[from] !== undefined) {
+    pkg.scripts[to] = pkg.scripts[from]
+    delete pkg.scripts[from]
+    writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`)
+    console.log(`  ↺ ${path} script "${from}" renamed to "${to}"`)
+  }
+}
+
+/** Replaces one example-referencing sentence in an otherwise-kept doc file. */
+function rewriteMention(path: string, search: string, replace: string): void {
+  const content = readFileSync(path, 'utf8')
+  const rewritten = content.replace(search, replace)
+  if (rewritten !== content) {
+    writeFileSync(path, rewritten)
+    console.log(`  ↺ ${path} (example mention removed)`)
+  }
+}
+
 console.log('Ejecting the greet example slice…\n')
 
 console.log('DELETE-marked files:')
@@ -196,6 +217,11 @@ for (const [file, stub] of Object.entries(STUBS)) {
 }
 writeFileSync('packages/core/src/application/README.md', REGISTRY_STUB)
 console.log('  ↺ packages/core/src/application/README.md (registry emptied)')
+rewriteMention(
+  'packages/core/src/domain/README.md',
+  'The `greet` feature next door is what an extracted module looks like.',
+  'An extracted feature module will sit next door once one emerges.'
+)
 
 // The map is generated from the tree, so the eject reshapes it: regenerate in
 // the same operation, or docs/architecture.spec.ts fails the very next gate.
@@ -207,6 +233,9 @@ console.log(
 )
 dropDependency('packages/cli/package.json', 'dependencies', '@app/core')
 dropDependency('package.json', 'devDependencies', 'fast-check')
+
+console.log('\nRoot script, renamed off the example name:')
+renameScript('package.json', 'greet', 'start')
 
 console.log(`
 Done. Finish with:
