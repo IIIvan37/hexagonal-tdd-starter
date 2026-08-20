@@ -34,7 +34,9 @@ don't write it.
   `Result`, a separate `it` asserts what the fake received. No real fs/network.
 - For an invariant that must hold for all inputs, reach for **fast-check** property
   tests.
-- Run and SEE IT FAIL for the right reason: `pnpm test -- <path-or-name>`.
+- Run and SEE IT FAIL for the right reason: `pnpm test <path-or-name>` — never
+  `pnpm test -- <path>`, where the `--` defeats the filter and silently runs the
+  whole suite instead.
   A test that passes immediately tested nothing — fix it before continuing.
 
 ## GREEN — minimal code to pass (fake it, then triangulate)
