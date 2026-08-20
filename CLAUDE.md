@@ -110,8 +110,10 @@ not.
 - **Conventional Commits** (enforced by commitlint + the husky `commit-msg` hook).
 - **Each feature gets its own branch**, merged via PR — never commit a feature
   directly to `main` (enforced by `.claude/hooks/block-commit-on-main.sh`).
-  - **Doc-only exception**: a commit whose every change is documentation (`*.md` or
-    `docs/**`) may land directly on `main`.
+  - **Doc-only exception**: a commit whose every change is a `*.md` file may land
+    directly on `main`. The rule is the extension, never the directory — `docs/`
+    also holds `docs/docs.spec.ts` and `docs/architecture.spec.ts`, and a fitness
+    function is code.
 
 ## Harvest — how the method travels
 

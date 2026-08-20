@@ -15,12 +15,16 @@ fi
 # Staged files (added/copied/modified/renamed — deletions need no formatting).
 staged=$(git diff --cached --name-only --diff-filter=ACMR)
 
-# Doc-only fast path: a commit touching only *.md / docs/** skips the code gate
-# — but NOT the docs fitness function (docs/docs.spec.ts): the STATUS/session
-# bounds exist precisely to catch doc commits, so exempting doc commits from
-# them would hollow out the guard. commitlint still runs via the commit-msg
-# hook; CI re-runs the full gate.
-if [ -n "$staged" ] && ! printf '%s\n' "$staged" | grep -qvE '\.md$|^docs/'; then
+# Doc-only fast path: a commit touching only *.md skips the code gate — but NOT
+# the docs fitness function (docs/docs.spec.ts): the STATUS/session bounds exist
+# precisely to catch doc commits, so exempting doc commits from them would hollow
+# out the guard. commitlint still runs via the commit-msg hook; CI re-runs the
+# full gate.
+#
+# The rule is the EXTENSION, never the directory: docs/ holds docs.spec.ts and
+# architecture.spec.ts, so a `^docs/` exemption would let a fitness function
+# change skip the very gate it belongs to.
+if [ -n "$staged" ] && ! printf '%s\n' "$staged" | grep -qvE '\.md$'; then
   echo "📝 doc-only commit — running only the docs fitness function"
   pnpm -s exec vitest run docs/docs.spec.ts
   exit 0
