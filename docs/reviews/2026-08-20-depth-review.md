@@ -16,13 +16,23 @@ deliberately dropped.
 
 | # | Site | Lens | Sev | Claim | Status |
 |---|------|------|-----|-------|--------|
-| 1 | [fake-fidelity.spec.ts:234](../../packages/core/src/fake-fidelity.spec.ts) | seam | medium | The ADR-0008 guard counts adapters by the `implements` keyword, so a functional adapter leaves it asleep | ⬜ |
+| 1 | [fake-fidelity.spec.ts:234](../../packages/core/src/fake-fidelity.spec.ts) | seam | medium | The ADR-0008 guard counts adapters by the `implements` keyword, so a functional adapter leaves it asleep | ✅ |
 | 2 | [eject-example.ts:49](../../scripts/eject-example.ts) | decomposition | medium | The skeleton taxonomy is declared twice and only one direction is checked | ⬜ |
 | 3 | [contract-discipline.spec.ts:38](../../packages/core/src/contract-discipline.spec.ts) | decomposition | low | The source-tree walker is re-derived in 8 detectors, where jscpd is configured not to look | ⬜ |
 | 4 | [arch-map.ts:137](../../scripts/arch-map.ts) | depth | low | The generator hides the fold but leaks how to acquire its input | ⬜ |
 | 5 | [result.ts:25](../../packages/core/src/shared/result.ts) | depth | low | `isOk`/`isErr` have no consumer outside their own spec | ⬜ |
 
-### 1 — the fake-fidelity recognizer *(medium)*
+### 1 — the fake-fidelity recognizer *(medium)* — ✅ closed 2026-08-20
+
+> **Closed.** The recognizer now turns on `implementsPort`, which reads the port
+> in any implementation position — `implements X`, `const a: X =`, `): X`,
+> `} satisfies X`. `bodiesImplementing` scans declaration blocks rather than
+> class headers, so an object-literal or factory adapter yields its body, and
+> `ASYNC_METHOD` learned the `load: async () =>` property form. Seven fixtures
+> cover the idioms one by one, and an eighth runs the whole chain on
+> `load: async () => {}` closed by `satisfies` — the exact shape ADR-0008's
+> Context quotes. The real tree still reports one adapter per async port, so the
+> guard stays dormant for the right reason.
 
 `realAdapters` (`fake-fidelity.spec.ts:234-239`) counts a production file as an
 adapter only if it matches `/implements\s+[^{]*\bPort\b/`, and
