@@ -23,162 +23,59 @@ import {
 } from 'node:fs'
 import { join } from 'node:path'
 import { writeArchitectureMap } from './arch-map.ts'
-
-const DELETE_MARKER = 'EXAMPLE (greet slice) — DELETE'
-const REWRITE_MARKER = 'EXAMPLE CONTENT, SKELETON ROLE'
-
-/** Every .ts file under packages/, recursively. */
-function sourceFiles(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory() && entry.name !== 'node_modules') {
-      return sourceFiles(path)
-    }
-    return entry.isFile() && entry.name.endsWith('.ts') ? [path] : []
-  })
-}
-
-function firstLine(path: string): string {
-  return readFileSync(path, 'utf8').split('\n', 1)[0] ?? ''
-}
-
-// ---------------------------------------------------------------------------
-// Stubs for the SKELETON ROLE files: same file, same role, no example left.
-// ---------------------------------------------------------------------------
-
-const STUBS: Record<string, string> = {
-  'packages/core/src/index.ts': `// Public contract of the core (the only surface adapters consume).
-// Empty until your first slice exports something — a consumer first (README).
-export {}
-`,
-
-  'packages/core/src/testing/index.ts': `// Test-support surface of the core, consumed by adapters through \`@app/core/testing\`.
-// Kept out of \`src/index.ts\` on purpose: production code must not be able to
-// import a fake, and this module is the only place allowed to depend on vitest.
-// Add your first port's contract + in-memory fake here (/new-feature-hexa).
-export {}
-`,
-
-  'packages/cli/src/run.ts': `import { EXIT_MISUSE } from './report.ts'
-
-/**
- * Composition root: parse argv, inject the real ports into the use-case, map the
- * Result to an exit code. No business logic here — wording and exit codes live
- * in \`report.ts\`. Return the exit code, never call \`process.exit\` from here.
- *
- * The example slice was ejected: build your first one (/new-feature-hexa).
- */
-export async function run(_argv: readonly string[]): Promise<number> {
-  console.error('no feature yet — write the first acceptance test (/new-feature-hexa)')
-  return EXIT_MISUSE
-}
-`,
-
-  'packages/cli/src/report.ts': `/** Exit codes, as a CLI convention — a presentation concern, not a domain one. */
-export const EXIT_MISUSE = 2
-
-// When your first use-case returns a tagged error union, map it here to a
-// message + exit code, exhaustively (switch + \`exhausted(error: never)\` —
-// see docs/adr/0004-errors-as-tagged-values.md for the pattern).
-`,
-
-  'packages/cli/src/run.spec.ts': `import { afterEach, describe, expect, it, vi } from 'vitest'
-import { run } from './run.ts'
-
-// Acceptance-test altitude (in process). Rewrite around your first slice.
-afterEach(() => {
-  vi.restoreAllMocks()
-})
-
-describe('run — ejected skeleton', () => {
-  it('explains itself and exits with the misuse code', async () => {
-    const err = vi.spyOn(console, 'error').mockImplementation(() => {})
-    await expect(run([])).resolves.toBe(2)
-    expect(err).toHaveBeenCalledOnce()
-  })
-})
-`,
-
-  'packages/cli/src/main.spec.ts': `import { execFile } from 'node:child_process'
-import { fileURLToPath } from 'node:url'
-import { promisify } from 'node:util'
-import { describe, expect, it } from 'vitest'
-
-const execFileAsync = promisify(execFile)
-const mainPath = fileURLToPath(new URL('./main.ts', import.meta.url))
-
-// Binary-test altitude: the \`bin\` runs .ts sources under plain node (strip-only
-// type stripping). This stub keeps that invariant locked between the eject and
-// your first feature — see docs/adr/0001-strip-only-typescript-no-build-step.md.
-describe('the CLI binary, run by plain node', () => {
-  it('starts, refuses politely, and exits with the misuse code', async () => {
-    try {
-      await execFileAsync(process.execPath, [mainPath])
-      expect.unreachable('the stub must exit non-zero')
-    } catch (thrown) {
-      const failure = thrown as { code?: number; stderr?: string }
-      expect(failure.code).toBe(2)
-      expect(failure.stderr).toContain('no feature yet')
-    }
-  })
-})
-`
-}
-
-const REGISTRY_STUB = `# Application registry (use-cases + ports)
-
-> The registry itself is SKELETON — keep this file, and keep it in sync.
-
-The single place to look before adding a feature, so ports and use-cases get
-**reused, not reinvented** (\`/new-feature-hexa\`).
-
-## Use-cases
-
-| Use-case | Signature | Notes |
-|----------|-----------|-------|
-| _(none yet)_ | | |
-
-## Ports
-
-| Port | Kind | Contract | Implemented by |
-|------|------|----------|----------------|
-| _(none yet)_ | | | |
-
-Every port owns a **contract** (obligations written once, replayed against each
-implementation) and an in-memory fake, both in \`../testing/\`. Add them in the
-same step as the port.
-`
+import {
+  DELETE_MARKER,
+  firstLine,
+  REGISTRY_STUB,
+  REWRITE_MARKER,
+  STUBS,
+  sourceFiles
+} from './eject-taxonomy.ts'
 
 // ---------------------------------------------------------------------------
 
+// An exact-string edit that matches nothing is the same class of failure as an
+// unlisted skeleton file, one level down: silent. README's "Make it yours" tells
+// the reader to rename packages BEFORE tearing out the example, after which
+// `@app/core` no longer exists under that name — and knip then fails the
+// ejected skeleton's gate with no clue why. So every edit below says when it
+// found nothing to do.
 function dropDependency(path: string, section: string, name: string): void {
   const pkg = JSON.parse(readFileSync(path, 'utf8'))
-  if (pkg[section]?.[name] !== undefined) {
-    delete pkg[section][name]
-    writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`)
-    console.log(`  - ${name} removed from ${path} (${section})`)
+  if (pkg[section]?.[name] === undefined) {
+    console.warn(
+      `  ! ${name} not found in ${path} (${section}) — already gone, or renamed`
+    )
+    return
   }
+  delete pkg[section][name]
+  writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`)
+  console.log(`  - ${name} removed from ${path} (${section})`)
 }
 
 /** Renames a root-level npm script, keeping its command. */
 function renameScript(path: string, from: string, to: string): void {
   const pkg = JSON.parse(readFileSync(path, 'utf8'))
-  if (pkg.scripts?.[from] !== undefined) {
-    pkg.scripts[to] = pkg.scripts[from]
-    delete pkg.scripts[from]
-    writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`)
-    console.log(`  ↺ ${path} script "${from}" renamed to "${to}"`)
+  if (pkg.scripts?.[from] === undefined) {
+    console.warn(`  ! ${path} has no script "${from}" — nothing renamed`)
+    return
   }
+  pkg.scripts[to] = pkg.scripts[from]
+  delete pkg.scripts[from]
+  writeFileSync(path, `${JSON.stringify(pkg, null, 2)}\n`)
+  console.log(`  ↺ ${path} script "${from}" renamed to "${to}"`)
 }
 
 /** Replaces one example-referencing sentence in an otherwise-kept doc file. */
 function rewriteMention(path: string, search: string, replace: string): void {
   const content = readFileSync(path, 'utf8')
   const rewritten = content.replace(search, replace)
-  if (rewritten !== content) {
-    writeFileSync(path, rewritten)
-    console.log(`  ↺ ${path} (example mention removed)`)
+  if (rewritten === content) {
+    console.warn(`  ! ${path} no longer contains the sentence to rewrite`)
+    return
   }
+  writeFileSync(path, rewritten)
+  console.log(`  ↺ ${path} (example mention removed)`)
 }
 
 console.log('Ejecting the greet example slice…\n')
