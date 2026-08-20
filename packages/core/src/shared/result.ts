@@ -20,17 +20,3 @@ export function ok<T>(value: T): Result<T, never> {
 export function err<E>(error: E): Result<never, E> {
   return { ok: false, error }
 }
-
-/** Type guard: narrows to the success branch. */
-export function isOk<T, E>(
-  result: Result<T, E>
-): result is { readonly ok: true; readonly value: T } {
-  return result.ok
-}
-
-/** Type guard: narrows to the failure branch. */
-export function isErr<T, E>(
-  result: Result<T, E>
-): result is { readonly ok: false; readonly error: E } {
-  return !result.ok
-}
