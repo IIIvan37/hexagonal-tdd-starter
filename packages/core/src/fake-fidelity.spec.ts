@@ -1,7 +1,10 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import {
+  filesUnder,
+  normalized,
+  packageRoots
+} from '../../../scripts/source-tree.ts'
 
 /**
  * Design fitness function for FAKE FIDELITY ON THE DIMENSION THAT MATTERS
@@ -182,25 +185,6 @@ export function realSeams(
   )
 }
 
-function walk(dir: string, keep: (name: string) => boolean): readonly string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      return entry.name === '.stryker-tmp' ? [] : walk(path, keep)
-    }
-    return keep(entry.name) ? [path] : []
-  })
-}
-
-function packageRoots(): readonly string[] {
-  const packages = fileURLToPath(new URL('../..', import.meta.url))
-  return readdirSync(packages, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => join(packages, entry.name, 'src'))
-    .filter((src) => existsSync(src))
-}
-
-const normalized = (path: string): string => path.replaceAll('\\', '/')
 const isTestKit = (path: string): boolean =>
   normalized(path).includes('/testing/')
 
@@ -380,7 +364,7 @@ describe('the detectors themselves', () => {
 describe('async fakes model the delay, once the seam is real', () => {
   const roots = packageRoots()
   const sources = roots.flatMap((root) =>
-    walk(root, (name) => /\.tsx?$/.test(name))
+    filesUnder(root, (_path, name) => /\.tsx?$/.test(name))
   )
   const production = sources.filter(
     (path) => !isTestKit(path) && !/\.spec\.tsx?$/.test(path)

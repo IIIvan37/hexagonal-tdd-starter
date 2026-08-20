@@ -1,7 +1,11 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import {
+  filesUnder,
+  normalized,
+  packageRoots
+} from '../../../scripts/source-tree.ts'
 
 /**
  * Design fitness function for PORT CONTRACTS AND THEIR FAKES (ADR-0002).
@@ -35,27 +39,8 @@ const PORT_FAKES: ReadonlyArray<{
   readonly allowed: readonly string[]
 }> = []
 
-function walk(dir: string, keep: (name: string) => boolean): readonly string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      return entry.name === '.stryker-tmp' ? [] : walk(path, keep)
-    }
-    return keep(entry.name) ? [path] : []
-  })
-}
-
-function packageRoots(): readonly string[] {
-  const packages = fileURLToPath(new URL('../..', import.meta.url))
-  return readdirSync(packages, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => join(packages, entry.name, 'src'))
-    .filter((src) => existsSync(src))
-}
-
 /** This very file spells member sets in its config — never a double. */
 const self = fileURLToPath(import.meta.url)
-const normalized = (path: string): string => path.replaceAll('\\', '/')
 
 /** Exported `…Contract` suites declared under a testing/ directory. */
 function contractExports(): ReadonlyArray<{
@@ -63,7 +48,9 @@ function contractExports(): ReadonlyArray<{
   readonly file: string
 }> {
   return packageRoots()
-    .flatMap((root) => walk(root, (name) => /^[^.]+\.ts$/.test(name)))
+    .flatMap((root) =>
+      filesUnder(root, (_path, name) => /^[^.]+\.ts$/.test(name))
+    )
     .filter((path) => normalized(path).includes('/testing/'))
     .flatMap((path) =>
       [
@@ -76,7 +63,7 @@ function contractExports(): ReadonlyArray<{
 
 describe('contract discipline over every package', () => {
   const specs = packageRoots().flatMap((root) =>
-    walk(root, (name) => /\.spec\.tsx?$/.test(name))
+    filesUnder(root, (_path, name) => /\.spec\.tsx?$/.test(name))
   )
 
   it('still finds contract suites to hold to account', (context) => {
@@ -106,7 +93,7 @@ describe('contract discipline over every package', () => {
 
   it('keeps every hand-rolled double of a registered port on the allowlist', () => {
     const kits = packageRoots().flatMap((root) =>
-      walk(root, (name) => /\.spec\.tsx?$|test-kit/.test(name))
+      filesUnder(root, (_path, name) => /\.spec\.tsx?$|test-kit/.test(name))
     )
     for (const { port, members, reference, allowed } of PORT_FAKES) {
       const offenders = kits.filter((path) => {

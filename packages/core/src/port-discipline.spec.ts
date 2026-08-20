@@ -1,7 +1,7 @@
-import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { filesUnder } from '../../../scripts/source-tree.ts'
 
 /**
  * Design fitness function for PORT SHAPE (ISP). An optional method in a
@@ -35,15 +35,8 @@ const MAX_PORT_MEMBERS = 6
 const OPTIONAL_METHOD = /^\s*(?:readonly\s+)?[\w$]+\?\s*\(/
 const OPTIONAL_FN_PROP = /^\s*(?:readonly\s+)?[\w$]+\?\s*:\s*\(.*=>/
 
-function portFiles(dir: string): readonly string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      return entry.name === '.stryker-tmp' ? [] : portFiles(path)
-    }
-    return entry.name === 'ports.ts' ? [path] : []
-  })
-}
+const portFiles = (dir: string): readonly string[] =>
+  filesUnder(dir, (_path, name) => name === 'ports.ts')
 
 interface Finding {
   readonly path: string

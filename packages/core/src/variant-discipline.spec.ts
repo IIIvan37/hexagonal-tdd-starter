@@ -1,7 +1,10 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { readFileSync } from 'node:fs'
 import { describe, expect, it } from 'vitest'
+import {
+  filesUnder,
+  normalized,
+  packageRoots
+} from '../../../scripts/source-tree.ts'
 
 /**
  * Design fitness function for CLOSED VARIANT SETS — the shotgun-surgery
@@ -63,32 +66,12 @@ function membershipChains(source: string, path: string): readonly string[] {
 }
 
 /** Production `.ts`/`.tsx` under a root: no specs, no ambient declarations. */
-function productionSources(dir: string): readonly string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      return entry.name === '.stryker-tmp' ? [] : productionSources(path)
-    }
-    if (
-      /\.tsx?$/.test(entry.name) &&
-      !/\.spec\.tsx?$|\.d\.ts$/.test(entry.name)
-    ) {
-      return [path]
-    }
-    return []
-  })
-}
-
-/** Every packages/<name>/src in the workspace — adapters included. */
-function packageRoots(): readonly string[] {
-  const packages = fileURLToPath(new URL('../..', import.meta.url))
-  return readdirSync(packages, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => join(packages, entry.name, 'src'))
-    .filter((src) => existsSync(src))
-}
-
-const normalized = (path: string): string => path.replaceAll('\\', '/')
+const productionSources = (dir: string): readonly string[] =>
+  filesUnder(
+    dir,
+    (_path, name) =>
+      /\.tsx?$/.test(name) && !/\.spec\.tsx?$|\.d\.ts$/.test(name)
+  )
 
 describe('the detectors themselves', () => {
   it('sees a whole set quoted, ignoring comments and record keys', () => {

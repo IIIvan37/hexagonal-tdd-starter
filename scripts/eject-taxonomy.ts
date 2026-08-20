@@ -7,22 +7,15 @@
 // below and the first-line markers each say "which files are skeleton", and
 // only one direction was ever checked.
 
-import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { filesUnder } from './source-tree.ts'
 
 export const DELETE_MARKER = 'EXAMPLE (greet slice) — DELETE'
 export const REWRITE_MARKER = 'EXAMPLE CONTENT, SKELETON ROLE'
 
 /** Every .ts file under packages/, recursively. */
-export function sourceFiles(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory() && entry.name !== 'node_modules') {
-      return sourceFiles(path)
-    }
-    return entry.isFile() && entry.name.endsWith('.ts') ? [path] : []
-  })
-}
+export const sourceFiles = (dir: string): readonly string[] =>
+  filesUnder(dir, (_path, name) => name.endsWith('.ts'))
 
 export function firstLine(path: string): string {
   return readFileSync(path, 'utf8').split('\n', 1)[0] ?? ''

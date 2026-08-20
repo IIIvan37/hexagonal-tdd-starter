@@ -1,7 +1,12 @@
-import { readdirSync, readFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import {
+  filesUnder,
+  normalized,
+  packageRoots
+} from '../../../scripts/source-tree.ts'
 
 /**
  * Architecture fitness function: every VALUE the core exports from its public
@@ -21,7 +26,6 @@ import { describe, expect, it } from 'vitest'
  */
 
 const CORE_SRC = fileURLToPath(new URL('.', import.meta.url))
-const WORKSPACE = resolve(CORE_SRC, '../../..')
 
 /** Blank out comments: whole-line `//` ones, and block comments. */
 function blankComments(source: string): string {
@@ -76,22 +80,14 @@ function importsFromCore(source: string, name: string): boolean {
 
 /** Every production .ts file of every non-core package. */
 function outsideCoreSources(): readonly string[] {
-  const packagesDir = join(WORKSPACE, 'packages')
-  return readdirSync(packagesDir, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && e.name !== 'core')
-    .flatMap((pkg) => walk(join(packagesDir, pkg.name, 'src')))
-}
-
-function walk(dir: string): string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      return walk(path)
-    }
-    const isProduction =
-      entry.name.endsWith('.ts') && !entry.name.endsWith('.spec.ts')
-    return isProduction ? [path] : []
-  })
+  return packageRoots()
+    .filter((root) => !normalized(root).endsWith('packages/core/src'))
+    .flatMap((root) =>
+      filesUnder(
+        root,
+        (_path, name) => name.endsWith('.ts') && !name.endsWith('.spec.ts')
+      )
+    )
 }
 
 describe('the detector itself', () => {

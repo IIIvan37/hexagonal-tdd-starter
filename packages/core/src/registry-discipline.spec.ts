@@ -1,7 +1,8 @@
-import { readdirSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { filesUnder } from '../../../scripts/source-tree.ts'
 
 /**
  * Design fitness function for THE APPLICATION REGISTRY. The registry
@@ -38,19 +39,6 @@ const EMPTY_ROW = /_\(none yet\)_/
 const EXPORTED_INTERFACE = /^export interface ([A-Za-z_$][\w$]*)/gm
 const EXPORTED_CONTRACT =
   /^export (?:function|const) ([A-Za-z_$][\w$]*Contract)\b/gm
-
-function filesUnder(
-  dir: string,
-  keep: (path: string, name: string) => boolean
-): readonly string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      return entry.name === '.stryker-tmp' ? [] : filesUnder(path, keep)
-    }
-    return keep(path, entry.name) ? [path] : []
-  })
-}
 
 const portFiles = (): readonly string[] =>
   filesUnder(

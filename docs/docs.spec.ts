@@ -86,8 +86,10 @@ describe('docs root stays scannable', () => {
 /**
  * Both dated-report directories obey the same two rules, so the rules are
  * written once. Stated as a helper rather than a second copy on purpose: the
- * depth review of 2026-08-20 found the source-tree walk re-derived in eight
+ * depth review of 2026-08-20 found the source-tree walk re-derived in nine
  * detectors, and a bound that is itself duplicated argues for the duplication.
+ * That walk now lives once in scripts/source-tree.ts (finding 3, closed); this
+ * helper is the same lesson applied one layer up.
  */
 const rollingWindow = (dir: string, max: number) =>
   describe(`docs/${dir} stays a rolling window`, () => {
