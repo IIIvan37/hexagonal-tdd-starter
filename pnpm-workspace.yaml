@@ -12,7 +12,13 @@ onlyBuiltDependencies:
 #   / 4.1.1 (4.x line).
 # - brace-expansion (via minimatch < stryker): GHSA-mh99-v99m-4gvg +
 #   GHSA-rgw5-rvv9-x895 — patched in 5.0.9 (5.x line).
+# - js-yaml (via cosmiconfig < commitlint): quadratic CPU consumption in
+#   `!!omap`, GHSA-5p4m-2wfm-xmqj — patched in 4.3.1 (4.x line).
+# - nanoid (via postcss < vite < vitest): a custom generator can loop
+#   indefinitely, GHSA-2v37-7h3g-55p8 — patched in 3.3.18 (3.x line).
 overrides:
   'fast-uri@>=3.0.0 <3.1.5': '^3.1.5'
   'fast-uri@>=4.0.0 <4.1.1': '^4.1.1'
   'brace-expansion@>=3.0.0 <5.0.9': '^5.0.9'
+  'js-yaml@>=4.0.0 <4.3.1': '^4.3.1'
+  'nanoid@>=3.0.0 <3.3.18': '^3.3.18'
