@@ -17,7 +17,7 @@ deliberately dropped.
 | # | Site | Lens | Sev | Claim | Status |
 |---|------|------|-----|-------|--------|
 | 1 | [fake-fidelity.spec.ts:234](../../packages/core/src/fake-fidelity.spec.ts) | seam | medium | The ADR-0008 guard counts adapters by the `implements` keyword, so a functional adapter leaves it asleep | ✅ |
-| 2 | [eject-example.ts:49](../../scripts/eject-example.ts) | decomposition | medium | The skeleton taxonomy is declared twice and only one direction is checked | ⬜ |
+| 2 | [eject-example.ts:49](../../scripts/eject-example.ts) | decomposition | medium | The skeleton taxonomy is declared twice and only one direction is checked | ✅ |
 | 3 | [contract-discipline.spec.ts:38](../../packages/core/src/contract-discipline.spec.ts) | decomposition | low | The source-tree walker is re-derived in 8 detectors, where jscpd is configured not to look | ⬜ |
 | 4 | [arch-map.ts:137](../../scripts/arch-map.ts) | depth | low | The generator hides the fold but leaks how to acquire its input | ⬜ |
 | 5 | [result.ts:25](../../packages/core/src/shared/result.ts) | depth | low | `isOk`/`isErr` have no consumer outside their own spec | ⬜ |
@@ -63,7 +63,24 @@ idiom to the existing `describe('the detectors themselves')` block. The cheaper
 honest alternative: make the convention mechanical and fail the gate on a port
 implementation that omits `implements`.
 
-### 2 — the eject taxonomy, checked one way *(medium)*
+### 2 — the eject taxonomy, checked one way *(medium)* — ✅ closed 2026-08-20
+
+> **Closed.** The prerequisite was a boundary, not a test:
+> [scripts/eject-taxonomy.ts](../../scripts/eject-taxonomy.ts) now holds the
+> declaration — markers, stubs, `markedFiles()` — and
+> [eject-example.ts](../../scripts/eject-example.ts) owns the effect, the way
+> `arch-map.ts` already separates them.
+> [docs/eject-taxonomy.spec.ts](../eject-taxonomy.spec.ts) asserts both
+> directions, that stubs name real files, and that the markers stay disjoint;
+> both directions were proven to fail on injected drift before being trusted.
+> The three exact-string edits now report a zero match instead of no-oping.
+> One licensed empty state — an already-ejected project — because without it
+> the ejected skeleton is red, which the run proved.
+>
+> **Follow-up this raised:** the eject machinery survives into every scaffolded
+> project, where it has nothing left to describe. Whether the eject should
+> remove itself (script, taxonomy, spec and the `eject:example` entry) is a
+> decision this step did not take.
 
 "Which files are skeleton" is declared twice: once per file on line 1
 (`EXAMPLE (greet slice) — DELETE`, `EXAMPLE CONTENT, SKELETON ROLE`, `KEEP`),
