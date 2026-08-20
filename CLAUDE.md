@@ -92,6 +92,14 @@ not.
 - **New feature** = a hexagonal vertical slice (`/new-feature-hexa`): pure domain +
   use-case/port in `core`, adapter in `cli`; register it in
   [packages/core/src/application/README.md](packages/core/src/application/README.md).
+- **Structural review is a workflow, not a mood.** Two live in
+  `.claude/workflows/`, both fan out and then adversarially verify every finding
+  before reporting it: `/solid-review` asks whether the code respects known
+  principles, `/depth-review` asks whether the boundaries are in the right
+  places at all (module depth, seam placement, information leakage,
+  decomposition axis). Reach for the second before extracting a module from the
+  nursery, or when a port gains its second adapter. What they surface about the
+  *method* goes upstream via `/template-harvest`.
 - **Close every step** with `/session-report` (rewrites `docs/STATUS.md` + a dated
   report under `docs/sessions/`). The report ships **inside** the feature's PR.
 - **Project state is bounded** (`docs/docs.spec.ts`, in the gate). `STATUS.md` is
