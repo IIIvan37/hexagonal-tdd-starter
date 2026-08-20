@@ -73,7 +73,7 @@
   vertical slice (`/new-feature-hexa`) — step 10, the second adapter that proves
   port substitutability. Nothing blocks it.
 - Gotchas / half-done edits: none — working tree clean, branch
-  `chore/close-depth-review-queue`, 5 commits, PR not yet opened.
+  `chore/close-depth-review-queue`, PR #46 opened.
 - **Two traps this step exposed, worth remembering when writing any fitness
   function over build artefacts:**
   1. Two assertions in the new spec passed **vacuously** against the real repo —

@@ -50,7 +50,7 @@ Nothing blocks it, and the review queue is empty.
 | 1–7 | Hardening, emergent modules, doc truth, architecture map, depth-review harvest, both reviews as workflows + the gate over `.claude/` | ✅ merged |
 | 8 | First real `/depth-review` run — 14 raw, 9 refuted, 5 confirmed; workflow recalibrated on its own yield | ✅ delivered by PR #43 |
 | 9 | The two harvest candidates closed — adapter recognition by shape, eject taxonomy checked both ways | ✅ delivered by PR #44 |
-| 10 | The review queue closed, 5 of 5 — the gate layer held to the doctrine ([ADR-0010](adr/0010-the-gate-layer-is-held-to-the-doctrine.md)) | ✅ |
+| 10 | The review queue closed, 5 of 5 — the gate layer held to the doctrine ([ADR-0010](adr/0010-the-gate-layer-is-held-to-the-doctrine.md)) | ✅ delivered by PR #46 |
 | 11 | _your first real feature_ — brings the second adapter that proves port substitutability | ⬜ |
 
 ## Open questions
