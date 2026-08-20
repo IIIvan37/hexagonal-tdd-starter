@@ -26,20 +26,17 @@
   extracted feature modules (`greet/` is the worked example) + `shared/`
   kernel; public surface, purity, port shape, contracts, variants and the
   registry all fitness-checked.
-- **Health**: 245 tests, 100 % coverage, 100 % mutation score; ejected
+- **Health**: 258 tests, 100 % coverage, 100 % mutation score; ejected
   skeleton replayed green (map included).
 
 ## Next action
 
-Work the queue in [reviews/2026-08-20-depth-review.md](reviews/2026-08-20-depth-review.md),
-starting with the **fake-fidelity recognizer** — before the first real feature. It counts
-adapters by the `implements` keyword, so a const-typed or factory adapter leaves
-the ADR-0008 guard asleep and the gate green — and the field-project fakes that
-motivated the ADR are written in exactly that style. It is a prerequisite: the
-first feature is what is meant to wake this check.
-
-Then build **your first real feature** as a hexagonal vertical slice
+Build **your first real feature** as a hexagonal vertical slice
 (`/new-feature-hexa`) — the second adapter that proves port substitutability.
+Its two blockers are gone: the fake-fidelity guard now recognises an adapter in
+any idiom, so that second adapter wakes it whatever syntax it is written in.
+The three remaining review findings are all low and none blocks a feature —
+work the queue in [reviews/](reviews/) when convenient.
 
 ## Current milestone
 
@@ -48,8 +45,8 @@ Then build **your first real feature** as a hexagonal vertical slice
 | 1–5 | Hardening, emergent modules, doc truth, DX findings, architecture map | ✅ merged |
 | 6 | Depth-review harvest — registry, port width, fake fidelity, ADR 0008/0009 | ✅ delivered by PR #39 |
 | 7 | `depth-review` workflow + the shape test over `.claude/` | ✅ delivered by the depth-review workflow PR |
-| 8 | First real `/depth-review` run — 14 raw, 9 refuted, 5 confirmed; workflow recalibrated on its own yield | 🔵 in progress |
-| 9 | Fake-fidelity recognizer + eject taxonomy check — the two harvest candidates | ⬜ |
+| 8 | First real `/depth-review` run — 14 raw, 9 refuted, 5 confirmed; workflow recalibrated on its own yield | ✅ delivered by PR #43 |
+| 9 | The two harvest candidates closed — adapter recognition by shape, eject taxonomy checked both ways | 🔵 in review |
 | 10 | _your first real feature_ — brings the second adapter that proves port substitutability | ⬜ |
 
 ## Open questions

@@ -29,7 +29,14 @@ const REAL_ADAPTERS_FOR_A_REAL_SEAM = 2
 
 const EXPORTED_INTERFACE = /^export interface ([\w$]+)/
 const PROMISE_RETURN = /:\s*Promise<|=>\s*Promise</
-const ASYNC_METHOD = /^\s*(?:public\s+)?async\s+([\w$]+)\s*\(/
+/** `async load(` on a class or object literal, and `load: async (` / `load = async (`
+ * as a property — ADR-0008's own motivating evidence is written the second way. */
+const ASYNC_METHOD =
+  /^\s*(?:public\s+|readonly\s+)?(?:async\s+([\w$]+)\s*\(|([\w$]+)\s*[:=]\s*async\s*\()/
+
+/** A line that opens a declaration whose block may implement a port. */
+const DECLARATION =
+  /^\s*(?:export\s+)?(?:default\s+)?(?:abstract\s+)?(?:class|const|let|var|function|async\s+function)\b/
 
 /** Exported interfaces of a `ports.ts` that promise a Promise. */
 export function asyncPortsOf(source: string): readonly string[] {
@@ -67,7 +74,7 @@ export function unconditionalSettlers(source: string): readonly string[] {
   const found: string[] = []
   for (const [index, line] of lines.entries()) {
     const declaration = ASYNC_METHOD.exec(line)
-    const name = declaration?.[1]
+    const name = declaration?.[1] ?? declaration?.[2]
     if (name === undefined) {
       continue
     }
@@ -88,33 +95,79 @@ export function unconditionalSettlers(source: string): readonly string[] {
 }
 
 /**
- * Bodies of the classes in `source` that implement `port`. Scoping to the class
- * matters: one testing file holds every fake of a feature, so scanning the whole
- * file would blame one port for another's methods.
+ * Does this line name `port` in an IMPLEMENTATION position? The distinction the
+ * detector turns on is "what counts as an implementation", not which keyword
+ * happens to declare it: this codebase is idiomatic functional TypeScript, and
+ * ADR-0008's own motivating fakes are object literals. A recognizer tied to
+ * `implements` is blind to the evidence that motivated it — and a blind
+ * detector is indistinguishable from a dormant one.
+ */
+export function implementsPort(source: string, port: string): boolean {
+  const position = new RegExp(
+    // class Http implements NameSource
+    `\\bimplements\\b[^{]*\\b${port}\\b` +
+      // const http: NameSource = { … }
+      `|:\\s*${port}\\b\\s*=` +
+      // function createStdin(): NameSource { … }
+      `|\\)\\s*:\\s*${port}\\b` +
+      // } satisfies NameSource
+      `|\\bsatisfies\\s+${port}\\b`
+  )
+  return source.split('\n').some((line) => position.test(line))
+}
+
+/** The balanced block a declaration opens, or undefined if it opens none. */
+function blockAt(
+  lines: readonly string[],
+  index: number
+): { readonly body: string; readonly last: string } | undefined {
+  let depth = 0
+  let body = ''
+  let last = ''
+  for (const [offset, rest] of lines.slice(index).entries()) {
+    // A declaration that ends before opening a brace is a value, not a block —
+    // walking on would swallow the rest of the file.
+    if (
+      !body.includes('{') &&
+      offset > 0 &&
+      (rest.trim() === '' || DECLARATION.test(rest))
+    ) {
+      return undefined
+    }
+    depth += (rest.match(/{/g) ?? []).length - (rest.match(/}/g) ?? []).length
+    body += `${rest}\n`
+    last = rest
+    if (depth <= 0 && body.includes('{')) {
+      return { body, last }
+    }
+  }
+  return undefined
+}
+
+/**
+ * Bodies of the declarations in `source` that implement `port`, in any of the
+ * idioms above. Scoping to the declaration matters: one testing file holds every
+ * fake of a feature, so scanning the whole file would blame one port for
+ * another's methods. The port is looked for on the block's opening line and on
+ * its closing one, which is where `satisfies` lands.
  */
 export function bodiesImplementing(
   source: string,
   port: string
 ): readonly string[] {
-  const declaration = new RegExp(
-    `^\\s*(?:export\\s+)?class\\s+[\\w$]+[^{]*\\bimplements\\b[^{]*\\b${port}\\b`
-  )
   const lines = source.split('\n')
   const bodies: string[] = []
   for (const [index, line] of lines.entries()) {
-    if (!declaration.test(line)) {
+    if (!DECLARATION.test(line)) {
       continue
     }
-    let depth = 0
-    let body = ''
-    for (const rest of lines.slice(index)) {
-      depth += (rest.match(/{/g) ?? []).length - (rest.match(/}/g) ?? []).length
-      body += `${rest}\n`
-      if (depth <= 0 && body.includes('{')) {
-        break
-      }
+    const block = blockAt(lines, index)
+    if (block === undefined) {
+      continue
     }
-    bodies.push(body)
+    if (implementsPort(line, port) || implementsPort(block.last, port)) {
+      bodies.push(block.body)
+    }
   }
   return bodies
 }
@@ -212,6 +265,112 @@ describe('the detectors themselves', () => {
     ).toEqual(['save'])
   })
 
+  it('recognises an implementation whatever syntax declares it', () => {
+    // The idioms CLAUDE.md endorses, not just the one `greet` happens to use.
+    expect(
+      implementsPort('class Http implements NameSource {', 'NameSource')
+    ).toBe(true)
+    expect(
+      implementsPort('export const http: NameSource = {', 'NameSource')
+    ).toBe(true)
+    expect(
+      implementsPort('function createStdin(): NameSource {', 'NameSource')
+    ).toBe(true)
+    expect(implementsPort('} satisfies NameSource', 'NameSource')).toBe(true)
+  })
+
+  it('does not mistake a mention of the port for an implementation', () => {
+    expect(
+      implementsPort("import type { NameSource } from './ports'", 'NameSource')
+    ).toBe(false)
+    expect(implementsPort('export interface NameSource {', 'NameSource')).toBe(
+      false
+    )
+    expect(
+      implementsPort('class Http implements GreetingSink {', 'NameSource')
+    ).toBe(false)
+  })
+
+  it('takes the body of a const-typed adapter, not only a class', () => {
+    const kit = [
+      'export const inMemoryStore: Store = {',
+      '  async load(): Promise<string> {',
+      '    return this.name',
+      '  },',
+      '}',
+      'export const inMemorySink: Sink = {',
+      '  async save(): Promise<void> {',
+      '    this.rows.push(1)',
+      '  },',
+      '}'
+    ].join('\n')
+    expect(
+      bodiesImplementing(kit, 'Store').flatMap(unconditionalSettlers)
+    ).toEqual(['load'])
+    expect(
+      bodiesImplementing(kit, 'Sink').flatMap(unconditionalSettlers)
+    ).toEqual(['save'])
+  })
+
+  it('takes the body of a factory that returns the port', () => {
+    const kit = [
+      'export function createStore(): Store {',
+      '  return {',
+      '    async load(): Promise<string> {',
+      '      return name',
+      '    },',
+      '  }',
+      '}'
+    ].join('\n')
+    expect(
+      bodiesImplementing(kit, 'Store').flatMap(unconditionalSettlers)
+    ).toEqual(['load'])
+  })
+
+  it('takes the body of an object closed by `satisfies`', () => {
+    const kit = [
+      'export const inMemoryStore = {',
+      '  async load(): Promise<string> {',
+      '    return name',
+      '  },',
+      '} satisfies Store'
+    ].join('\n')
+    expect(
+      bodiesImplementing(kit, 'Store').flatMap(unconditionalSettlers)
+    ).toEqual(['load'])
+  })
+
+  it('flags an arrow-property fake that settles with nothing to drive', () => {
+    // ADR-0008's own motivating evidence is written this way.
+    expect(
+      unconditionalSettlers('  load: async () => {\n    return name\n  },')
+    ).toEqual(['load'])
+  })
+
+  it('leaves an arrow-property fake that awaits something the test controls', () => {
+    expect(
+      unconditionalSettlers(
+        '  load: async () => {\n    await gate\n    return name\n  },'
+      )
+    ).toEqual([])
+  })
+
+  it('fires end to end on the shape ADR-0008 was written from', () => {
+    // The field-project fakes were `load: vi.fn(async () => {})` — an object
+    // property, not a class method. The detector must catch its own evidence.
+    const kit = [
+      'export const fakeSource = {',
+      '  load: async () => {',
+      "    return 'ada'",
+      '  },',
+      '} satisfies NameSource'
+    ].join('\n')
+    const offenders = realSeams(['NameSource'], () => 2).flatMap((port) =>
+      bodiesImplementing(kit, port).flatMap(unconditionalSettlers)
+    )
+    expect(offenders).toEqual(['load'])
+  })
+
   it('stays dormant at one adapter, and wakes at two', () => {
     expect(realSeams(['Store'], () => 1)).toEqual([])
     expect(realSeams(['Store'], () => 2)).toEqual(['Store'])
@@ -233,9 +392,7 @@ describe('async fakes model the delay, once the seam is real', () => {
 
   const realAdapters = (port: string): readonly string[] =>
     production.filter((path) =>
-      new RegExp(`implements\\s+[^{]*\\b${port}\\b`).test(
-        readFileSync(path, 'utf8')
-      )
+      implementsPort(readFileSync(path, 'utf8'), port)
     )
 
   it('finds ports to scan (a silent empty scan proves nothing)', (context) => {
