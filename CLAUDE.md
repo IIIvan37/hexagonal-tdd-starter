@@ -112,3 +112,30 @@ not.
   directly to `main` (enforced by `.claude/hooks/block-commit-on-main.sh`).
   - **Doc-only exception**: a commit whose every change is documentation (`*.md` or
     `docs/**`) may land directly on `main`.
+
+## Harvest — how the method travels
+
+The skills and workflows in `.claude/` are **copied** into each project
+scaffolded from this template, never referenced from a shared plugin
+([ADR-0009](docs/adr/0009-method-travels-by-copy-and-harvest.md)). A consuming
+project owns its copy and is expected to adapt it — a gate that knows its own
+toolchain is the point, not a defect.
+
+The price of copying is that improvements do not propagate on their own. They
+propagate by ritual, in both directions, and the template states its half of the
+bargain here so the loop does not depend on one person standing at both ends:
+
+- **Upstream (`/template-harvest`).** When a field project finds something that
+  is true of the *method* and not just of that project — a class of bug its
+  review keeps surfacing, a rule the gate should have caught — it comes back
+  here as a PR. `contract-discipline.spec.ts`, `variant-discipline.spec.ts` and
+  `adr-pointers.spec.ts` all arrived that way; each names its origin in its
+  docstring, so a reader can tell a harvested rule from an invented one.
+- **Downstream.** A template change reaches a project by hand, adapted on
+  arrival. Adaptation is expected: record what you changed and why in the
+  project's own ADRs, the way its ADRs already say "adapted from ADR-000X of the
+  template".
+
+Agents exploring a project built this way should read
+[docs/agents/domain.md](docs/agents/domain.md) first — it says where the
+vocabulary lives, and why there is no `CONTEXT.md`.
