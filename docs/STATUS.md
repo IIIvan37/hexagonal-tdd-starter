@@ -26,14 +26,20 @@
   extracted feature modules (`greet/` is the worked example) + `shared/`
   kernel; public surface, purity, port shape, contracts, variants and the
   registry all fitness-checked.
-- **Health**: 243 tests, 100 % coverage, 100 % mutation score; ejected
+- **Health**: 245 tests, 100 % coverage, 100 % mutation score; ejected
   skeleton replayed green (map included).
 
 ## Next action
 
-Build **your first real feature** as a hexagonal vertical slice
-(`/new-feature-hexa`). It is what brings the second adapter that proves port
-substitutability, and what wakes the dormant fake-fidelity check.
+Work the queue in [reviews/2026-08-20-depth-review.md](reviews/2026-08-20-depth-review.md),
+starting with the **fake-fidelity recognizer** — before the first real feature. It counts
+adapters by the `implements` keyword, so a const-typed or factory adapter leaves
+the ADR-0008 guard asleep and the gate green — and the field-project fakes that
+motivated the ADR are written in exactly that style. It is a prerequisite: the
+first feature is what is meant to wake this check.
+
+Then build **your first real feature** as a hexagonal vertical slice
+(`/new-feature-hexa`) — the second adapter that proves port substitutability.
 
 ## Current milestone
 
@@ -42,7 +48,9 @@ substitutability, and what wakes the dormant fake-fidelity check.
 | 1–5 | Hardening, emergent modules, doc truth, DX findings, architecture map | ✅ merged |
 | 6 | Depth-review harvest — registry, port width, fake fidelity, ADR 0008/0009 | ✅ delivered by PR #39 |
 | 7 | `depth-review` workflow + the shape test over `.claude/` | ✅ delivered by the depth-review workflow PR |
-| 8 | _your first real feature_ — brings the second adapter that proves port substitutability, and wakes the dormant fake-fidelity check | ⬜ |
+| 8 | First real `/depth-review` run — 14 raw, 9 refuted, 5 confirmed; workflow recalibrated on its own yield | 🔵 in progress |
+| 9 | Fake-fidelity recognizer + eject taxonomy check — the two harvest candidates | ⬜ |
+| 10 | _your first real feature_ — brings the second adapter that proves port substitutability | ⬜ |
 
 ## Open questions
 
@@ -53,7 +61,9 @@ substitutability, and what wakes the dormant fake-fidelity check.
   session-report skill demands it) removes the class that flips at merge —
   branch names, PR lifecycle — but a stale test count or phase still needs a
   reader to notice. No mechanical check yet.
-- **What does `/depth-review` actually yield?** Its calibration is reasoned, not
-  measured — it has never been run. `/solid-review` carries a real yield in its
-  `whenToUse` (20 raw, 14 refuted, 6 confirmed); record the first real one the
-  same way, and tighten the lenses that produce only refuted claims.
+- **Do the gate's own boundaries deserve the same rules as the hexagon's?** The
+  depth review's five survivors are all in gate machinery and build scripts,
+  and four share one shape: knowledge with no module (what an adapter is, which
+  files are skeleton, what the source tree is), re-derived everywhere, with
+  jscpd configured not to see it. Either that layer is held to the doctrine or
+  the exemption is written down.

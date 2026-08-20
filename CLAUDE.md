@@ -98,13 +98,16 @@ not.
   principles, `/depth-review` asks whether the boundaries are in the right
   places at all (module depth, seam placement, information leakage,
   decomposition axis). Reach for the second before extracting a module from the
-  nursery, or when a port gains its second adapter. What they surface about the
-  *method* goes upstream via `/template-harvest`.
+  nursery, or when a port gains its second adapter. **The output is a file, not
+  a chat message**: the write-up lands in `docs/reviews/<date>-<slug>.md` as a
+  work queue whose findings are ticked as they close. What they surface about
+  the *method* goes upstream via `/template-harvest`.
 - **Close every step** with `/session-report` (rewrites `docs/STATUS.md` + a dated
   report under `docs/sessions/`). The report ships **inside** the feature's PR.
 - **Project state is bounded** (`docs/docs.spec.ts`, in the gate). `STATUS.md` is
   a snapshot of the present (≤ 60 lines), never a log; `docs/sessions/` is a
-  rolling window of 5, older reports `git mv`'d to `sessions/archive/`; durable
+  rolling window of 5 and `docs/reviews/` one of 3, older reports `git mv`'d to
+  the matching `archive/`; durable
   decisions go to `docs/adr/`, indexed by subject. If a bound fails, move content
   out — never raise the bound.
 

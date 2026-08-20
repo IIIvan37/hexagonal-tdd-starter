@@ -25,8 +25,13 @@ const DOCS = fileURLToPath(new URL('.', import.meta.url))
 /** Long enough for the present state, too short for a log. */
 const STATUS_MAX_LINES = 60
 
-/** Reports kept in the working set; older ones move to sessions/archive/. */
+/** Reports kept in the working set; older ones move to <dir>/archive/. */
 const ACTIVE_SESSIONS_MAX = 5
+
+/** Review reports kept in the working set; older ones move to reviews/archive/.
+ * A review is superseded by the next run of the same workflow, so the window is
+ * shorter than the session one. */
+const ACTIVE_REVIEWS_MAX = 3
 
 /** Active root documents (STATUS, live plans, runbooks); finished plans move
  * to archive/. */
@@ -78,28 +83,37 @@ describe('docs root stays scannable', () => {
   })
 })
 
-describe('docs/sessions stays a rolling window', () => {
-  const sessions = `${DOCS}sessions`
+/**
+ * Both dated-report directories obey the same two rules, so the rules are
+ * written once. Stated as a helper rather than a second copy on purpose: the
+ * depth review of 2026-08-20 found the source-tree walk re-derived in eight
+ * detectors, and a bound that is itself duplicated argues for the duplication.
+ */
+const rollingWindow = (dir: string, max: number) =>
+  describe(`docs/${dir} stays a rolling window`, () => {
+    const active = () =>
+      markdownIn(`${DOCS}${dir}`).filter((n) => n !== '_TEMPLATE.md')
 
-  it(`keeps at most ${ACTIVE_SESSIONS_MAX} active reports`, () => {
-    const active = markdownIn(sessions).filter((n) => n !== '_TEMPLATE.md')
-    expect(
-      active.length,
-      `\ndocs/sessions/ holds ${active.length} reports (max ${ACTIVE_SESSIONS_MAX}).` +
-        '\nMove the oldest to docs/sessions/archive/ — they stay readable, just' +
-        '\nout of the working set.'
-    ).toBeLessThanOrEqual(ACTIVE_SESSIONS_MAX)
+    it(`keeps at most ${max} active reports`, () => {
+      expect(
+        active().length,
+        `\ndocs/${dir}/ holds ${active().length} reports (max ${max}).` +
+          `\nMove the oldest to docs/${dir}/archive/ — they stay readable, just` +
+          '\nout of the working set.'
+      ).toBeLessThanOrEqual(max)
+    })
+
+    it('names reports so the oldest is obvious at a glance', () => {
+      for (const name of active()) {
+        expect(name, `${name} should be <YYYY-MM-DD>-<slug>.md`).toMatch(
+          /^\d{4}-\d{2}-\d{2}-[a-z0-9-]+\.md$/
+        )
+      }
+    })
   })
 
-  it('names reports so the oldest is obvious at a glance', () => {
-    const active = markdownIn(sessions).filter((n) => n !== '_TEMPLATE.md')
-    for (const name of active) {
-      expect(name, `${name} should be <YYYY-MM-DD>-<slug>.md`).toMatch(
-        /^\d{4}-\d{2}-\d{2}-[a-z0-9-]+\.md$/
-      )
-    }
-  })
-})
+rollingWindow('sessions', ACTIVE_SESSIONS_MAX)
+rollingWindow('reviews', ACTIVE_REVIEWS_MAX)
 
 /*
  * Path truth: the LIVING docs (README, CLAUDE.md, CONTRIBUTING, skills,
