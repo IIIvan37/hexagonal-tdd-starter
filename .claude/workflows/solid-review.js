@@ -8,13 +8,19 @@ export const meta = {
   ],
 }
 
+// `args` arrives as a bare string from the skill launch instruction; reading
+// only `args.context` silently drops the caller's history (see depth-review).
+const callerContext =
+  (typeof args === 'string' ? args : args?.context) ??
+  'None supplied — read the project status docs yourself before judging.'
+
 const CONTEXT = `
 You are reviewing THIS repository. Before judging anything, read CLAUDE.md at
 the repo root and docs/ (STATUS/architecture/ADRs under docs/adr/) to learn
 the layout, the invariants and the conventions — do not assume.
 
 Recent history (what the caller wants the investigators to know):
-${args?.context ?? 'None supplied — read the project status docs yourself before judging.'}
+${callerContext}
 
 IMPORTANT calibration — hexagonal, TDD-strict, idiomatic functional TypeScript, NOT Java OO:
 - An exhaustive switch over a discriminated union in ONE place is IDIOMATIC, not an OCP violation. OCP violations = the same variant-dispatch duplicated across several files (shotgun surgery to add a variant).

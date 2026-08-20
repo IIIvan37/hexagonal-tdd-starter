@@ -1,13 +1,20 @@
 export const meta = {
   name: 'depth-review',
-  description: 'Module-depth review: 4 explorers (seam, depth, leak, decomposition), cross-corroborated, adversarially verified',
-  whenToUse: "When a module or a port has grown enough that its SHAPE is worth questioning — before extracting a module from the nursery, after a port gains its second adapter, or at the end of a structural work stream. Complements /solid-review: SOLID asks whether the code respects known principles, this asks whether the boundaries are in the right places at all. Pass args.context with 2-3 lines of recent history. Origin: the module-depth review run on the field project (2026-08) whose findings became ADR-0008 and the registry / port-width / fake-fidelity guards.",
+  description: 'Module-depth review: 4 explorers (seam, depth, leak, decomposition), every finding adversarially verified before it is reported',
+  whenToUse: "When a module or a port has grown enough that its SHAPE is worth questioning — before extracting a module from the nursery, after a port gains its second adapter, or at the end of a structural work stream. Complements /solid-review: SOLID asks whether the code respects known principles, this asks whether the boundaries are in the right places at all. Pass 2-3 lines of recent history as args. Origin: the module-depth review run on the field project (2026-08) whose findings became ADR-0008 and the registry / port-width / fake-fidelity guards. Measured yield on this template (2026-08-20, first real run): 14 raw findings, 9 refuted, 5 confirmed, 0 false positives surviving — and every survivor landed in the gate machinery (fitness functions, eject script, arch-map generator), none in the hexagon. Per lens, kept/raw: decomposition 2/5, depth 2/4, seam 1/4, leak 0/5.",
   phases: [
     { title: 'Explore', detail: 'one explorer per depth lens, independently' },
     { title: 'Verify', detail: 'one adversarial skeptic per finding' },
     { title: 'Report', detail: 'synthesise the survivors into a report' },
   ],
 }
+
+// The skill's own launch instruction renders `args` as a bare string, so a
+// workflow that only reads `args.context` silently reviews with no history —
+// which is what happened on the first real run (2026-08-20).
+const callerContext =
+  (typeof args === 'string' ? args : args?.context) ??
+  'None supplied — read docs/STATUS.md yourself before judging.'
 
 const CONTEXT = `
 You are reviewing THIS repository. Before judging anything, read CLAUDE.md at
@@ -17,7 +24,7 @@ layout — this is a hexagonal, TDD-strict, idiomatic functional TypeScript
 codebase, not Java OO.
 
 Recent history (what the caller wants the explorers to know):
-${args?.context ?? 'None supplied — read docs/STATUS.md yourself before judging.'}
+${callerContext}
 
 WHAT THIS REVIEW IS. Not "does the code follow principles" (that is
 /solid-review). This one asks whether the BOUNDARIES ARE IN THE RIGHT PLACES:
@@ -90,7 +97,15 @@ ordering assumption or unit spelled out in a core module AND an adapter; error
 tags whose wording (not their tag) is relied upon outside the adapter that owns
 the phrasing.
 For each, name the second site and state what would silently break if only the
-first were changed.`,
+first were changed.
+PRECONDITION, measured: on the first real run this lens produced five claims
+and no survivors, four of them killed by the same sentence — the transcription
+is a trade-off some ADR already decided in writing (0002 on minimal contracts,
+0004 on tags-not-sentences, 0008 on what a contract can prove). Deliberate
+translation at the edge is the seam working, not a leak. So before you raise a
+claim: read docs/adr/ and the docstring at the point of friction, and name the
+decision your claim contradicts. If you cannot name one, you have found the
+design, not a defect — drop the claim.`,
   },
   {
     key: 'decomposition',
@@ -174,8 +189,11 @@ Suggested boundary: ${f.suggestion || '(none)'}
 
 Corroboration: ${f.corroboration} of ${LENSES.length} independent explorers
 flagged this file (lens${f.lenses.length > 1 ? 'es' : ''}: ${f.lenses.join(', ')}).
-Treat that as a weak prior only — explorers converge on big files for boring
-reasons, and one explorer reading carefully beats three skimming.
+Treat that as NO evidence, and if anything as a reason for suspicion. Measured
+on the first real run: all four corroborated findings were refuted and all five
+survivors came from a single lens — two lenses agreeing meant they had shared a
+misreading, twice the same one. One explorer reading carefully beats three
+converging on a big file.
 
 Try to REFUTE the claim. Read the cited code and its callers yourself. Refute
 (real=false) if any of these hold:
@@ -193,6 +211,17 @@ Confirm (real=true) only if the boundary is genuinely misplaced AND moving it
 has a payoff you can name. Set the adjusted severity if real.
 Be strict: when in doubt, refute.`
 
+// The refuted claims must reach the writer, not just their count: the first
+// real run asked for a "Not retained" section, was handed only a number, and
+// said so in the report — "I cannot itemise them without inventing them".
+const dismissed = (refuted) =>
+  refuted.map((f) => ({
+    file: f.line ? `${f.file}:${f.line}` : f.file,
+    lenses: f.lenses,
+    claim: f.title,
+    whyItFell: f.verdict.reasoning,
+  }))
+
 const reportPrompt = (confirmed, refuted) => `${CONTEXT}
 
 You are writing up a module-depth review. ${confirmed.length} finding(s)
@@ -201,16 +230,29 @@ survived adversarial verification; ${refuted.length} were refuted.
 Survivors (JSON):
 ${JSON.stringify(confirmed, null, 2)}
 
-Write a Markdown report, and return ONLY the Markdown:
+Refuted claims, with the verifier's reasoning (JSON):
+${JSON.stringify(dismissed(refuted), null, 2)}
+
+Write the Markdown body of docs/reviews/<YYYY-MM-DD>-depth-review.md, and
+return ONLY the Markdown. It is a work queue the next steps consume from inside
+the repo, not a page to read once — so every path is a repo-relative link a
+reader can click, and every claim is closable.
 - Open with two or three sentences on the shape of the result — what the
   boundaries of this codebase are like right now, not a list restated in prose.
-- One section per surviving finding, ordered by severity then corroboration.
-  Give each a heading naming the subject, then: what the boundary is today,
-  what it costs at the next change, and where it should be instead. Cite
-  file:line. Say the corroboration count only where it is above one.
-- Close with "Not retained", listing the refuted claims in one line each with
-  the reason they fell. This section is the honest half of the report: it is
-  what stops the next reviewer re-finding them.
+- Then a "Findings" table, one row per survivor: site (linked, with line), lens,
+  severity, the one-line claim, and a ⬜ status column the reader ticks as
+  each is closed. Say above it that the file is archived once every row is
+  ticked or deliberately dropped.
+- One section per surviving finding, ordered by severity then by what the cost
+  lands on first. Give each a heading naming the subject, then: what the
+  boundary is today, what it costs at the next change, and where it should be
+  instead. Cite file:line. Do not report the corroboration count — it measured
+  as an anti-signal, and printing it reads as weight.
+- Close with "Not retained": every refuted claim above, one line each, naming
+  the file and compressing the verifier's reasoning to the single ground that
+  killed it. This section is the honest half of the report — it is what stops
+  the next reviewer re-finding them — so write it from the JSON, in full, and
+  never summarise it as a count.
 - Then "Harvest candidates": of the survivors, which indict the METHOD rather
   than this project — a class of problem a fitness function could settle once
   and for all. Name the guard you would write, or say none.
@@ -270,5 +312,10 @@ if (confirmed.length === 0) {
 
 phase('Report')
 const report = await agent(reportPrompt(confirmed, refuted), { label: 'report', phase: 'Report' })
+
+// The workflow runtime has no filesystem, so the caller writes the file. Say
+// where: a review that only exists in a chat transcript cannot be worked from,
+// and docs/reviews/ is bounded by docs/docs.spec.ts like docs/sessions/ is.
+log('write `report` to docs/reviews/<YYYY-MM-DD>-depth-review.md — roll the oldest to reviews/archive/ if that makes four')
 
 return { confirmed, refuted, report }
