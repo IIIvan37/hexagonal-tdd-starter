@@ -8,6 +8,13 @@ import type { Instant } from '../domain/instant.ts'
  * they are the fakes every use-case test needs, and they are the subject the
  * port contracts are validated against — so a contract that the reference
  * implementation fails is a bug in the contract, not in an adapter.
+ *
+ * These two async fakes settle instantly, which ADR 0008 rejects for a port
+ * whose seam is real: a test cannot open the window where the load is in
+ * flight. It is deliberate here and nowhere else — `greet` is a one-shot CLI
+ * with one adapter per port, so a controllable fake would be a supplier with no
+ * consumer. Copy the SHAPE of these fakes, not their settlement: the moment
+ * your port has a second real adapter, `fake-fidelity.spec.ts` will say so.
  */
 
 /** In-memory `NameSource`: hands back the name it was built with. */

@@ -6,34 +6,39 @@
 
 ## Where we are
 
-- **Phase**: the architecture is now **visualized and drift-proof** —
-  [ARCHITECTURE.md](ARCHITECTURE.md) is a module-level Mermaid map generated
-  from Sheriff's own graph (`pnpm arch:map`); an emerged feature appears as a
-  subgraph the moment it exists, the gate fails when the committed map drifts,
-  and the eject regenerates it. Before that, the DX-review findings landed
-  (strip-only enforced tree-wide via `erasableSyntaxOnly`, honest Node ≥ 25
-  bootstrap, explicit audience, skills reconciled with the tree).
+- **Phase**: the method now **harvests its own field reviews**. A module-depth
+  review run on the field project produced eight candidates; the three that
+  indicted the *method* rather than that project came back as mechanical
+  guards — the port registry must describe the tree in both directions, a port
+  may not exceed six callable members, and an async port's fake must model its
+  delay once the seam is real ([ADR-0008](adr/0008-port-contracts-model-the-hard-dimension.md)).
+  The loop that carries findings upstream is now named rather than tacit
+  (`/template-harvest`, `Harvest` in CLAUDE.md), and the choice to travel by
+  copy instead of a shared plugin is consigned
+  ([ADR-0009](adr/0009-method-travels-by-copy-and-harvest.md)).
+  Before that: the architecture map, generated from Sheriff's graph and
+  drift-checked ([ARCHITECTURE.md](ARCHITECTURE.md), `pnpm arch:map`).
 - **Core anatomy**: nurseries (`domain/`, `application/`, currently empty) →
   extracted feature modules (`greet/` is the worked example) + `shared/`
-  kernel; public surface and purity fitness-checked.
-- **Health**: 187 tests, 100 % coverage, 100 % mutation score; ejected
+  kernel; public surface, purity, port shape, contracts, variants and the
+  registry all fitness-checked.
+- **Health**: 234 tests, 100 % coverage, 100 % mutation score; ejected
   skeleton replayed green (map included).
 
 ## Next action
 
-Start the first real feature — the second adapter that proves port
-substitutability.
+Build the `depth-review` workflow — the depth/seam lens as a native workflow
+next to `solid-review.js`, with the shape test over `.claude/` shipping in the
+same step.
 
 ## Current milestone
 
 | Step | Description | Status |
 |------|-------------|--------|
-| 1 | Hardening + emergent modules (ADR-0006) | ✅ merged |
-| 2 | Detector hardening + doc truth (honest-review follow-up) | ✅ merged |
-| 3 | Post-merge review fixes (eject red skeleton, doc drift) + ADR-0007 | ✅ PR #23 |
-| 4 | DX findings (strip-only tree-wide, honest bootstrap, skills ↔ tree) | ✅ PR #24 |
-| 5 | Architecture map (generated from Sheriff's graph, drift-checked) | ✅ delivered by the arch-map PR |
-| 6 | _your first real feature_ — brings the second adapter that proves port substitutability | ⬜ |
+| 1–5 | Hardening, emergent modules, doc truth, DX findings, architecture map | ✅ merged |
+| 6 | Depth-review harvest — registry, port width, fake fidelity, ADR 0008/0009, harvest ritual | ✅ delivered by the depth-review harvest PR |
+| 7 | `depth-review` workflow + shape test over `.claude/` | ⬜ |
+| 8 | _your first real feature_ — brings the second adapter that proves port substitutability, and wakes the dormant fake-fidelity check | ⬜ |
 
 ## Open questions
 

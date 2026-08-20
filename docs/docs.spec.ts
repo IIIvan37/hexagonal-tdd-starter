@@ -216,6 +216,7 @@ function livingDocs(): readonly string[] {
     'docs/STATUS.md',
     'docs/ARCHITECTURE.md',
     'docs/adr/README.md',
+    'docs/agents/domain.md',
     ...skills,
     ...registries
   ].filter((doc) => existsSync(join(ROOT, doc)))

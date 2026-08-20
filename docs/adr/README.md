@@ -36,3 +36,5 @@ accepted ADR — supersede it with a new one and update the old one's status.
 | [0005](0005-bounded-project-state.md) | Project-state docs are bounded, and the bound is mechanical | accepted |
 | [0006](0006-emergent-feature-modules.md) | Feature modules are discovered, not decreed (emergent modularity) | accepted |
 | [0007](0007-frontend-agnostic-starter.md) | Keep the starter frontend-agnostic; a UI is an adapter the consuming project owns | accepted |
+| [0008](0008-port-contracts-model-the-hard-dimension.md) | A port contract models the dimension its implementations differ on | accepted |
+| [0009](0009-method-travels-by-copy-and-harvest.md) | The method travels by copy and harvest, not by plugin reference | accepted |
