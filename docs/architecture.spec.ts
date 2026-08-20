@@ -1,10 +1,14 @@
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { getProjectData } from '@softarc/sheriff-core'
 import { describe, expect, it } from 'vitest'
-import { ARCH_BEGIN, ARCH_END, mermaidOf } from '../scripts/arch-map.ts'
-import { config } from '../sheriff.config.ts'
+import {
+  ARCH_BEGIN,
+  ARCH_END,
+  currentMermaid,
+  docOf,
+  mermaidOf
+} from '../scripts/arch-map.ts'
 
 /**
  * Fitness function for the architecture map (docs/ARCHITECTURE.md).
@@ -137,26 +141,26 @@ describe('the committed map tells the truth', () => {
       resolve(DOCS, 'ARCHITECTURE.md'),
       'utf8'
     ).replaceAll('\r\n', '\n')
-    const begin = committed.indexOf(ARCH_BEGIN)
-    const end = committed.indexOf(ARCH_END)
     expect(
-      begin,
+      committed.indexOf(ARCH_BEGIN),
       'ARCHITECTURE.md lost its generation markers'
     ).toBeGreaterThan(-1)
-    expect(end, 'ARCHITECTURE.md lost its generation markers').toBeGreaterThan(
-      begin
-    )
-
-    const fresh = mermaidOf(
-      Object.values(config.entryPoints ?? {}).map((entry) =>
-        getProjectData(entry, ROOT)
-      )
-    )
     expect(
-      committed.slice(begin + ARCH_BEGIN.length, end).trim(),
-      '\ndocs/ARCHITECTURE.md drifted from the tree (a module emerged or moved).' +
+      committed.indexOf(ARCH_END),
+      'ARCHITECTURE.md lost its generation markers'
+    ).toBeGreaterThan(committed.indexOf(ARCH_BEGIN))
+
+    // The WHOLE document, not just the fenced block: the file says "do not
+    // edit by hand", so the prose is generated output too and a hand-edit to
+    // it is drift the gate should see. Composing the generator's own two
+    // exported steps means this asserts the path `pnpm arch:map` actually
+    // takes, instead of a copy of it kept in sync by hand.
+    expect(
+      committed,
+      '\ndocs/ARCHITECTURE.md drifted from the tree (a module emerged or moved,' +
+        '\nor the file was edited by hand).' +
         '\nRegenerate it: pnpm arch:map — the map must ship in the same commit' +
         '\nas the change that reshaped the graph.'
-    ).toBe(`\`\`\`mermaid\n${fresh}\n\`\`\``)
+    ).toBe(docOf(currentMermaid(ROOT)))
   })
 })

@@ -1,7 +1,7 @@
-import { existsSync, readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readdirSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { filesUnder, packageRoots } from '../../../scripts/source-tree.ts'
 
 /**
  * Design fitness function for ADR POINTERS. In the field project's SOLID
@@ -15,23 +15,8 @@ import { describe, expect, it } from 'vitest'
 
 const ADR_REF = /\bADR[- ](\d{4})\b/g
 
-function sources(dir: string): readonly string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      return entry.name === '.stryker-tmp' ? [] : sources(path)
-    }
-    return /\.tsx?$/.test(entry.name) ? [path] : []
-  })
-}
-
-function packageRoots(): readonly string[] {
-  const packages = fileURLToPath(new URL('../..', import.meta.url))
-  return readdirSync(packages, { withFileTypes: true })
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => join(packages, entry.name, 'src'))
-    .filter((src) => existsSync(src))
-}
+const sources = (dir: string): readonly string[] =>
+  filesUnder(dir, (_path, name) => /\.tsx?$/.test(name))
 
 const adrRoot = fileURLToPath(new URL('../../../docs/adr', import.meta.url))
 

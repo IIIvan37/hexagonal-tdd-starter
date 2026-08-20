@@ -133,14 +133,27 @@ export function mermaidOf(datas: readonly Record<string, FileEntry>[]): string {
   ].join('\n')
 }
 
-/** Rewrite docs/ARCHITECTURE.md from the current tree. */
-export function writeArchitectureMap(root: string): void {
-  const mermaid = mermaidOf(
+/**
+ * Acquire the graph and fold it — the whole protocol `pnpm arch:map` runs.
+ *
+ * This is the module's seam, and it exists because there are exactly TWO
+ * callers who need the current map and only one of them may write a file: the
+ * generator below, and the gate (`docs/architecture.spec.ts`). Before this was
+ * exported, the checker restated the fold verbatim and imported `config` and
+ * `getProjectData` purely to reconstruct it — so it verified its own copy of
+ * the protocol and never the path `pnpm arch:map` takes.
+ */
+export function currentMermaid(root: string): string {
+  return mermaidOf(
     Object.values(config.entryPoints ?? {}).map((entry) =>
       getProjectData(entry, root)
     )
   )
-  const doc = [
+}
+
+/** The generated document around a folded map — prose included. */
+export function docOf(mermaid: string): string {
+  return [
     '# Architecture map',
     '',
     '> **Generated** by `pnpm arch:map` — do not edit by hand. The gate',
@@ -164,7 +177,14 @@ export function writeArchitectureMap(root: string): void {
     ARCH_END,
     ''
   ].join('\n')
-  writeFileSync(resolve(root, 'docs/ARCHITECTURE.md'), doc)
+}
+
+/** Rewrite docs/ARCHITECTURE.md from the current tree. */
+export function writeArchitectureMap(root: string): void {
+  writeFileSync(
+    resolve(root, 'docs/ARCHITECTURE.md'),
+    docOf(currentMermaid(root))
+  )
 }
 
 const executedDirectly =

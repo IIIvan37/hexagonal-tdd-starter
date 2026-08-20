@@ -1,7 +1,7 @@
-import { readdirSync, readFileSync } from 'node:fs'
-import { join } from 'node:path'
+import { readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
+import { filesUnder } from '../../../scripts/source-tree.ts'
 
 /**
  * Architecture fitness function: the pure core must not reach for ambient state.
@@ -124,18 +124,11 @@ function foreignSpecifiersIn(source: string, path: string): readonly string[] {
 }
 
 /** Every non-spec `.ts` file under the core, recursively. */
-function coreSources(dir: string): readonly string[] {
-  return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
-    const path = join(dir, entry.name)
-    if (entry.isDirectory()) {
-      return coreSources(path)
-    }
-    if (entry.name.endsWith('.ts') && !entry.name.endsWith('.spec.ts')) {
-      return [path]
-    }
-    return []
-  })
-}
+const coreSources = (dir: string): readonly string[] =>
+  filesUnder(
+    dir,
+    (_path, name) => name.endsWith('.ts') && !name.endsWith('.spec.ts')
+  )
 
 const coreRoot = fileURLToPath(new URL('.', import.meta.url))
 

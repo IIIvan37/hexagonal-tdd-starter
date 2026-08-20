@@ -18,9 +18,9 @@ deliberately dropped.
 |---|------|------|-----|-------|--------|
 | 1 | [fake-fidelity.spec.ts:234](../../packages/core/src/fake-fidelity.spec.ts) | seam | medium | The ADR-0008 guard counts adapters by the `implements` keyword, so a functional adapter leaves it asleep | ✅ |
 | 2 | [eject-example.ts:49](../../scripts/eject-example.ts) | decomposition | medium | The skeleton taxonomy is declared twice and only one direction is checked | ✅ |
-| 3 | [contract-discipline.spec.ts:38](../../packages/core/src/contract-discipline.spec.ts) | decomposition | low | The source-tree walker is re-derived in 8 detectors, where jscpd is configured not to look | ⬜ |
-| 4 | [arch-map.ts:137](../../scripts/arch-map.ts) | depth | low | The generator hides the fold but leaks how to acquire its input | ⬜ |
-| 5 | [result.ts:25](../../packages/core/src/shared/result.ts) | depth | low | `isOk`/`isErr` have no consumer outside their own spec | ⬜ |
+| 3 | [source-tree.ts](../../scripts/source-tree.ts) | decomposition | low | The source-tree walker is re-derived in 8 detectors, where jscpd is configured not to look | ✅ |
+| 4 | [arch-map.ts:137](../../scripts/arch-map.ts) | depth | low | The generator hides the fold but leaks how to acquire its input | ✅ |
+| 5 | [result.ts:25](../../packages/core/src/shared/result.ts) | depth | low | `isOk`/`isErr` have no consumer outside their own spec | ✅ |
 
 ### 1 — the fake-fidelity recognizer *(medium)* — ✅ closed 2026-08-20
 
@@ -114,7 +114,44 @@ real defect is one level below the duplication — the module fuses its taxonomy
 declaration with its effectful main, where its neighbour `arch-map.ts` separates
 them. Export the taxonomy first.
 
-### 3 — the source tree, re-derived eight times *(low)*
+### 3 — the source tree, re-derived eight times *(low)* — ✅ closed 2026-08-20
+
+> **Closed**, by extraction rather than by exemption.
+> [scripts/source-tree.ts](../../scripts/source-tree.ts) holds `normalized`,
+> `packageRoots()` and `filesUnder(dir, keep)`; nine detectors import it —
+> eight named below, plus `scripts/eject-taxonomy.ts`, which was born with a
+> **ninth copy** one commit after this review predicted it ("the next change
+> here writes a ninth copy"). The module holds the SHAPE of the walk and not
+> the predicates: "what counts as a production source" still differs per
+> detector, and unifying those would have changed what each one sees.
+>
+> The counter-cost this finding asked to price decided the address. Under
+> `packages/core/src/` the module would land in Stryker's mutate globs, the
+> 100 % coverage thresholds, knip's view and Sheriff's tagging — production
+> weight for gate machinery. In `scripts/` it carries none of those and is
+> still scanned by jscpd (only `*.spec.ts` is ignored), so a tenth copy has to
+> be argued for. This follows the address finding 2 had just established for
+> `eject-taxonomy.ts`: declaration in `scripts/`, fitness function in `docs/`.
+>
+> **Verified, not assumed.** Folding nine walkers into one concentrates a risk
+> the clones diffused — every detector now scans whatever this module says the
+> tree is, and each only asserts its scan is non-empty, which catches a total
+> failure and not a partial one. A throwaway probe reimplemented each old
+> private walker and diffed its output against the new one: all nine scans
+> identical, file for file. [docs/source-tree.spec.ts](../source-tree.spec.ts)
+> pins the rest, and its two artefact-skip cases were **rewritten after they
+> were caught passing vacuously** — against the real repo they were green even
+> with the skip deleted, because `packages/cli/node_modules` holds only a
+> symlink and `.stryker-tmp` does not exist between mutation runs. They run
+> against a synthetic tree now, and were proven to fail on injected drift.
+>
+> **What the eject caught.** The first version of that spec asserted recursion
+> by naming `greet/domain/greeting.ts`, which turned the *ejected* skeleton
+> red — the same trap finding 2 licensed an empty state for. The assertion is
+> structural now (some hit sits in a subdirectory), and the eject was replayed
+> end-to-end: skeleton green, 172 passed, 100 % coverage.
+
+
 
 Eight detectors each carry a private recursive walker over `packages/*/src`,
 differing only in the filename predicate: `contract-discipline:38`,
@@ -145,7 +182,21 @@ the ninth copy has to be argued for — not an urgent repair.
 retrofitted, and it is inert everywhere, since every walker starts below
 `packages/<pkg>/src` while `.stryker-tmp` sits at the repo root.
 
-### 4 — the arch-map generator's leaked protocol *(low)*
+### 4 — the arch-map generator's leaked protocol *(low)* — ✅ closed 2026-08-20
+
+> **Closed.** `arch-map.ts` exports two steps instead of one: `currentMermaid(root)`
+> (acquire the graphs and fold them) and `docOf(mermaid)` (the document around
+> the map). `writeArchitectureMap` is now one line composing them, and
+> `docs/architecture.spec.ts` no longer imports `config` or `getProjectData` at
+> all — it asserts the path `pnpm arch:map` actually runs.
+>
+> One thing was made stronger than the finding asked. The spec compared only
+> the fenced block, so the prose above it — generated output, and labelled "do
+> not edit by hand" — could be hand-edited with the gate still green. It now
+> compares the WHOLE document against `docOf(currentMermaid(ROOT))`. Proven by
+> injection: a one-word edit to the prose is red, and was green before.
+
+
 
 `mermaidOf(datas)` (`arch-map.ts:121`) takes graphs already fetched;
 `writeArchitectureMap(root)` (`:137`) fetches and writes in one breath. The
@@ -171,7 +222,17 @@ all. The checker verifies its own copy of the protocol, never the path
 committed block against `currentMermaid(ROOT)`. `mermaidOf` stays exported for
 the six unit tests that feed it synthetic graphs. About five lines.
 
-### 5 — two guards that rename the discriminant *(low)*
+### 5 — two guards that rename the discriminant *(low)* — ✅ closed 2026-08-20
+
+> **Closed.** Both guards are gone; `ok`, `err` and the `Result` type are the
+> kernel's whole surface. The two spec cases were not simply deleted — they
+> were rewritten to narrow on the discriminant directly, so the file now
+> demonstrates *why* there is no guard rather than leaving a silence a future
+> contributor would fill. `result.ts` drops from 10 mutants to 6, all killed:
+> the 100 % mutation score is no longer partly bought on code no production
+> path executes.
+
+
 
 `isOk` returns `result.ok`, `isErr` returns `!result.ok` (`result.ts:25-36`).
 TypeScript narrows on the discriminant for free, and every real call site does

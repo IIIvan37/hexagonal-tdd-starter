@@ -38,3 +38,4 @@ accepted ADR — supersede it with a new one and update the old one's status.
 | [0007](0007-frontend-agnostic-starter.md) | Keep the starter frontend-agnostic; a UI is an adapter the consuming project owns | accepted |
 | [0008](0008-port-contracts-model-the-hard-dimension.md) | A port contract models the dimension its implementations differ on | accepted |
 | [0009](0009-method-travels-by-copy-and-harvest.md) | The method travels by copy and harvest, not by plugin reference | accepted |
+| [0010](0010-the-gate-layer-is-held-to-the-doctrine.md) | Hold the gate's own code to the doctrine it enforces | accepted |
