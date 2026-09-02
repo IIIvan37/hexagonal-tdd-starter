@@ -80,8 +80,8 @@ there, the ceremony costs more than it protects.
   (`workflow_dispatch`) — portability is checked where the promise is made, not
   on every push. Dependabot for the bumps.
 - **Claude Code skills**: `/tdd-cycle`, `/new-feature-hexa`, `/quality-gate`,
-  `/session-report` (the close-step discipline: report ships in the PR, mutation
-  run locally pre-PR).
+  `/session-report` (continuity only: the report ships in the PR; the gate and
+  the pre-PR mutation run are `/quality-gate`'s).
 
 ## Use it
 

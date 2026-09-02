@@ -51,6 +51,7 @@ old one, and keeps the three file selectors at their call sites.
 | 1–9 | Hardening, emergent modules, doc truth, architecture map, both reviews as workflows, the gate over `.claude/`, first `/depth-review` run and its harvest | ✅ merged |
 | 10 | The depth-review queue closed, 5 of 5 — the gate layer held to the doctrine ([ADR-0010](adr/0010-the-gate-layer-is-held-to-the-doctrine.md)) | ✅ delivered by PR #46 |
 | 11 | First `/solid-review` run — 18 raw, 12 refuted, 6 confirmed; the queue is the deliverable | ✅ landed on `main` (doc-only) |
+| — | Harvest from loupe: `/session-report` owns continuity only, `/quality-gate` the close-step checks | ✅ delivered by PR #47 |
 | 12 | Close the SOLID queue, 6 findings — the gate's TypeScript grammar gets a module, three defeated guards start guarding | ⬜ |
 | 13 | _your first real feature_ — brings the second adapter that proves port substitutability | ⬜ |
 
