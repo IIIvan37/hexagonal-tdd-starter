@@ -14,12 +14,7 @@ section is a log; docs/adr/ is the explanation.
 -->
 - <decision — [ADR-NNNN](../adr/NNNN-….md) if there is one>
 
-## Gate status
-- typecheck:
-- tests (with coverage):
-- mutation (Stryker, local, if core touched):
-- biome / sheriff / knip / jscpd:
-
 ## State to resume from
 - **Single next action**:
+- Tree state: <last `pnpm gate` result observed: green / red / not run> · <what is uncommitted, or "clean">
 - Gotchas / half-done edits:

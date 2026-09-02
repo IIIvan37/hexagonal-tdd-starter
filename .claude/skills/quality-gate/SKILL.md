@@ -73,8 +73,23 @@ Individual pieces if needed: `pnpm typecheck`, `pnpm check:fix` (biome auto-fix)
   (Metz), and the test net makes late factoring cheap. Never bump the
   threshold in `.jscpd.json`; never `ignore` without the reason line.
 
+## Before the PR — the close-step check
+
+The gate is per commit. One check is too slow for that cadence and runs once
+per step, before the PR opens. It is this skill's job, not the session
+report's: the report records, it verifies nothing.
+
+- **Mutation testing scoped to the diff.** If the step touched `@app/core`
+  (the mutated scope), run `pnpm test:mutation:diff` — it mutates only the core
+  modules the branch touches. Surviving mutants are caught **now**, while the
+  code is fresh. The FULL run (`pnpm test:mutation`) is CI's post-merge job and
+  stays authoritative — never claim its score locally. Skip only when the step
+  touched no mutated package. One heavy run at a time: never Stryker
+  concurrently with `gate` or a full suite (CPU starvation fails tests).
+
 ## Before declaring done
 
 - The gate is **green** (exit 0).
 - Core coverage holds the thresholds (`vitest.config.ts`).
+- The close-step check above ran (or the step touched no mutated package).
 - If the step is finished (not just verified), close it with `/session-report`.

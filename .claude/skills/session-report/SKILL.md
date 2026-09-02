@@ -1,46 +1,38 @@
 ---
 name: session-report
-description: Close a work step with a resumable session report. Use at the end of every step/PR so a fresh session can pick up exactly where this one left off. Updates the canonical docs/STATUS.md and appends a dated report under docs/sessions/.
+description: Close a work step with a resumable session report, so a fresh session picks up exactly where this one left off. Records the state, verifies nothing (the gate and mutation testing are /quality-gate's job). Appends a dated report under docs/sessions/ and rewrites the canonical docs/STATUS.md.
 ---
 
-# Session report (close a work step)
+# Session report (hand the work over to the next session)
 
-Produce the artifacts that let a new session resume with zero context loss. Run
-this at the end of each step/PR, before stopping.
+One responsibility: **continuity**. A fresh session must resume from the report
+and STATUS alone, without re-exploring the code. This skill records facts; it
+produces none. Checks (gate, mutation testing, module watch) belong to
+`/quality-gate` and `/new-feature-hexa` and have run **before** this skill is
+invoked — or the report says, honestly, that they have not.
 
 ## 1. Gather the real state (don't guess)
 
 ```
 date +%F                       # the report's date / filename prefix
 git branch --show-current
-git status --short
+git status --short             # uncommitted work = half-done edits
+git log --oneline main..HEAD   # what the step committed
 ```
 
-Then run the quality gate and record the result:
-
-- `pnpm gate` (typecheck + biome + arch + tests with coverage + knip + jscpd).
-- **Mutation testing locally (Stryker), scoped to the diff.** If the step
-  touched `@app/core` (the mutated scope), run `pnpm test:mutation:diff` — it
-  mutates only the core modules the branch touches — and report the score in
-  the gate section. Surviving mutants must be caught **before** the PR, while
-  the code is fresh. The FULL run (`pnpm test:mutation`) is CI's post-merge
-  job and stays authoritative — never claim its score locally. Skip only when
-  the step touched no mutated package (say so). One heavy run at a time (no
-  Stryker concurrent with `gate` or a full suite — CPU starvation fails tests).
-- Don't fabricate a green check — report failures honestly.
-- **Module watch** (ADR-0006): does a prefix/concept now appear >= 3 times in
-  the nursery? does a use-case + port serve a single cluster? `pnpm
-  modules:hint` points at candidates. If yes, note it under "Decisions" as a
-  pending extraction — or extract before closing (/new-feature-hexa 4bis).
+The one quality fact a resume needs is whether the tree was green when the
+session stopped: the last `pnpm gate` result observed this session (green,
+red, or not run). Write it down as observed — never run the gate from here
+to turn it green. That is a `/quality-gate` step, and it comes first.
 
 ## 2. Append a dated session report
 
 - Copy `docs/sessions/_TEMPLATE.md` to `docs/sessions/<YYYY-MM-DD>-<slug>.md`
   (slug = the step). Never overwrite an existing report — history is append-only.
-- Fill every section honestly: Done, Not done / remaining, Decisions, Gate status
-  (with the results from step 1), State to resume from.
-- "State to resume from" must name the SINGLE next action and any gotchas /
-  half-done edits.
+- Fill every section honestly: Done, Not done / remaining, Decisions, State to
+  resume from.
+- "State to resume from" must name the SINGLE next action, the tree state
+  (gate result, what is uncommitted) and any gotchas / half-done edits.
 - **Decisions is a log, not an explanation.** If the step changed a boundary, an
   invariant or the toolchain, write the reasoning once as an ADR in
   [docs/adr/](../../../docs/adr/) (copy `_TEMPLATE.md`, add it to the index) and
@@ -50,18 +42,21 @@ Then run the quality gate and record the result:
 
 ## 3. Roll the window
 
-`docs/sessions/` keeps the **5 most recent** reports. If adding yours makes six,
+`docs/sessions/` keeps the **5 most recent** reports (bounded by
+`docs/docs.spec.ts`, which fails the gate past that). If adding yours makes six,
 `git mv` the oldest into `docs/sessions/archive/`. Nothing is deleted — the
 working set just stays scannable.
 
-## 4. Rewrite the canonical STATUS
+## 4. Rewrite the canonical STATUS — inside the PR, merge-invariantly
 
 `docs/STATUS.md` is a **snapshot of the present, not a log** — bounded at 60
 non-blank lines by `docs/docs.spec.ts`, which fails the gate if it drifts.
 Rewrite it, don't append:
 
 - **Where we are** — phase, step, packages. Replace the old text.
-- **Next action** — the SINGLE next thing. Replace it.
+- **Next action** — the SINGLE next thing, one line. Replace it. A list of
+  candidates is not a next action: the following session would pick, and
+  pick differently from what this one had in mind.
 - **Write it merge-invariantly.** STATUS ships inside the PR but is read on
   `main` after the merge — any fact that flips at merge time is born stale.
   Name the step and its PR ("step N, delivered by PR #NN" is true before and
@@ -91,13 +86,31 @@ The report + STATUS update describe the work the PR contains, so they ship
 **inside** the PR — never as a separate post-merge commit on `main`.
 
 - Commit them on the **feature branch**, before `gh pr create`. Order per feature:
-  feature commits → this report commit → `pnpm gate` → push → open PR → merge.
+  feature commits → `/quality-gate` → this report commit → push → open PR →
+  merge. The report commit is doc-only: the pre-commit hook skips the code gate
+  and runs only the docs fitness function.
 - Phrase the **dated report** for the **pre-merge** state ("PR #N opened",
   branch still current) — not as if it were already merged. STATUS is the
   opposite (see step 4): merge-invariant, because it lives on `main`.
 - The doc-only-direct-to-`main` exception (see the `block-commit-on-main` hook) is
   only for a **standalone** report not tied to a code PR; a report that accompanies
-  code goes in that code's PR.
+  code goes in that code's PR. A CI verdict that lands after the push is a PR
+  check, never a post-merge report edit.
+
+## Resuming from a report (the other half of the contract)
+
+On a fresh session, do exactly two reads — `docs/STATUS.md` and the newest
+report:
+
+```
+ls docs/sessions/*.md | sort | tail -1     # names are date-prefixed
+```
+
+Never `ls -t`: a checkout resets mtimes and returns the wrong report. Then
+jump straight to the files the report names; explore beyond them only when
+the report is silent on something needed. If the branch is not `main` and
+carries uncommitted work no report names, the previous cycle was interrupted
+— say so before doing anything else.
 
 ## Output
 

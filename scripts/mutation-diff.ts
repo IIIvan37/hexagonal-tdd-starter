@@ -3,7 +3,7 @@
 // grows. The full run (all modules) remains CI's post-merge job — that run is
 // authoritative; this one is the fast local feedback loop.
 //
-// Run: pnpm test:mutation:diff   (at each close-step, see /session-report)
+// Run: pnpm test:mutation:diff   (at each close-step, see /quality-gate)
 //
 // Scope mapping (a scope = a --mutate glob):
 //   - a changed file under core/src/<feature>/ scopes its whole module —

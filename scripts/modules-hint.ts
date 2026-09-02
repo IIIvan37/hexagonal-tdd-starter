@@ -2,7 +2,7 @@
 // core/src/application, flat files) for module candidates — the signals of
 // ADR-0006. Naming a boundary is a domain act; this only points.
 //
-// Run: pnpm modules:hint   (typically at a close-step, see /session-report)
+// Run: pnpm modules:hint   (typically at a close-step, see /new-feature-hexa 4bis)
 //
 // Signals reported:
 //   - prefix clusters: >= 3 files sharing a kebab-case prefix (in the field project, the
