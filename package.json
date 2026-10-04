@@ -31,10 +31,10 @@
     "arch:map": "node scripts/arch-map.ts"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.5.5",
+    "@biomejs/biome": "^2.5.15",
     "@commitlint/cli": "^21.1.0",
     "@commitlint/config-conventional": "^21.1.0",
-    "@softarc/sheriff-core": "^0.19.6",
+    "@softarc/sheriff-core": "^0.20.0",
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",
     "@types/node": "^24.0.0",
